@@ -50,6 +50,10 @@ android {
     }
 }
 
+dependencies{
+    implementation 'com.google.firebase:firebase-auth:19.4.0'
+}
+
 flutter {
     source '../..'
 }

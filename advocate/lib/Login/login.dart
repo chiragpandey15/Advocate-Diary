@@ -18,7 +18,7 @@ class _LoginState extends State<Login> {
   FirebaseAuth _auth=FirebaseAuth.instance;
   FirebaseUser _user;
   GoogleSignIn _googleSignIn=new GoogleSignIn();
-
+  String mobile="",token="";
   bool wait=false;
 
   Future<void>sendToServer(String accessToken)async{
@@ -28,22 +28,36 @@ class _LoginState extends State<Login> {
       });
 
       Map<String,String>data={
-        'access':accessToken,
+        'accessToken':accessToken,
         'email':_user.email,
         'name':_user.displayName,
+        'mobile':mobile,
+        'DToken':token,
       };
 
       final url="http://192.168.43.235/Advocate/insertUser.php";
-
+      print(url);
+      print(data);
       final response =await http.post(url,body:data);
 
       if(response.statusCode==200)
       {
         Map res=jsonDecode(response.body);
-        if(res['ok']=='1')
+        print(res);
+        print(res['ok']);
+        if(res['ok']==1)
         {
+          print("Done Dona Done");
+
           SharedPreferences prefs = await SharedPreferences.getInstance();
           prefs.setString("login",res['auth']); 
+          
+          if(res.containsKey("expDate"))
+          {
+            prefs.setString("expDate",res['expDate']);
+            prefs.setString("allowed", res['allowed']);
+          }
+
           prefs.setString("user_photoUrl",_user.photoUrl);
           prefs.setString("user_name",_user.displayName);
           prefs.setString("user_email",_user.email);
@@ -61,6 +75,8 @@ class _LoginState extends State<Login> {
       }
 
     }catch(e){
+      print("ERROR");
+      print(e);
       Toast.show("Something went to wrong. Please try after some time",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);  
     }finally{
       setState(() {
