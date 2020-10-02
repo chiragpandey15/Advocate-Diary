@@ -9,9 +9,10 @@ class AddCase extends StatefulWidget {
 
 class _AddCaseState extends State<AddCase> {
 
+  List<String>option=["Applicant","Respondent"];
   bool wait=false;
-  int caseNumber,courtNumber,caseFee,weAre=2;
-  String clientName="",clientMobile="",opponent="",courtName="",firstDate="";
+  int caseNumber,courtNumber,caseFee,weAre=0;
+  String clientName="",clientMobile="",opponent="",courtName="",firstDate="",description="";
 
   //For Test
   String registeredDate;
@@ -26,8 +27,8 @@ class _AddCaseState extends State<AddCase> {
 
       DbHelper dB=DbHelper();
       dB.addCase(
-        Case(0,caseNumber,clientName,clientMobile,opponent,weAre.toString(),courtName,courtNumber,
-        caseFee,registeredDate,wait,firstDate)
+        Case(0,caseNumber,clientName,clientMobile,opponent,option[weAre],courtName,courtNumber,
+        caseFee,registeredDate,true,firstDate,description)
       );      
 
     }catch(e){
@@ -47,7 +48,7 @@ class _AddCaseState extends State<AddCase> {
       ),
       body:wait==true?Center(child: CircularProgressIndicator(),):
       Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.fromLTRB(12, 8, 23, 0),
         child: ListView(
           children: <Widget>[
                     TextFormField(
@@ -96,6 +97,46 @@ class _AddCaseState extends State<AddCase> {
                     onChanged: (s){
                         clientMobile=s;
                     },
+                ),
+                SizedBox(height:10),
+                Row(
+                  children: <Widget>[
+                    Text(
+                      "We are? ",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600
+                      ),
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Radio(
+                          value: 0, 
+                          groupValue: weAre, 
+                          onChanged: (s){
+                            setState(() {
+                              weAre=s;
+                            });
+                          }
+                        ),
+                        Text(option[0]),
+                      ],
+                    ),
+                    SizedBox(width:20),
+                    Row(
+                      children: <Widget>[
+                        Radio(
+                          value: 1, 
+                          groupValue: weAre, 
+                          onChanged: (s){
+                            setState(() {
+                              weAre=s;
+                            });
+                          }
+                        ),
+                        Text(option[1]),
+                      ],
+                    ),
+                  ],
                 ),
                 SizedBox(height:10),
                 TextFormField(
@@ -160,6 +201,22 @@ class _AddCaseState extends State<AddCase> {
                     keyboardType: TextInputType.number,
                     onChanged: (s){
                         caseFee=int.parse(s);
+                    },
+                ),
+                SizedBox(height:10),
+                TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Description",
+                      hintStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    maxLines: 3,
+                    onChanged: (s){
+                        description=s;
                     },
                 ),
                 SizedBox(height:10),

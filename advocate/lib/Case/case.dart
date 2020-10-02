@@ -1,6 +1,7 @@
 class Details{
   int id;
   String date;
+  String previousDate;
   String stage;
   String extraNote;
   String paymentDemand;
@@ -10,6 +11,7 @@ class Details{
   Details(
     this.id,
     this.date,
+    this.previousDate,
     this.stage,
     this.extraNote,
     this.paymentDemand,
@@ -53,6 +55,7 @@ class Case{
   String registeredDate;
   bool messagePermission;
   String firstDate;
+  String description;
   List<Details>details;
 
 
@@ -68,7 +71,8 @@ class Case{
       this.caseFee,
       this.registeredDate,
       this.messagePermission,
-      this.firstDate
+      this.firstDate,
+      this.description
     );
 
     Case.fromJson(Map<String,dynamic>json)
@@ -128,6 +132,8 @@ class Case{
     String getFirstDate(){
       return this.firstDate;
     }
+
+    
 
     List<Details>getDetails(){
       return this.details;

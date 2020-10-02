@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:advocate/Case/case.dart';
+import 'package:advocate/Storage/database.dart';
 
 class PerticaularCase extends StatefulWidget {
   @override
@@ -11,6 +12,47 @@ class _PerticaularCaseState extends State<PerticaularCase> {
   Case thisCase;
   Map map;
   bool visited=false,wait=false;
+  DbHelper dB;
+
+  Future<void>deleteCase(int id)async{
+    try{
+      setState(() {
+        wait=true;
+      });
+      
+      await dB.deleteCase(id);
+
+    }catch(e){
+
+    }finally{
+      setState(() {
+        wait=false;
+      });
+    }
+  }
+
+  Future<void>getDetails()async{
+    try{
+      setState(() {
+        wait=true;
+      });
+
+      dB.getDetails(thisCase.id).then((value){
+        thisCase.details=value;
+      });
+
+    }catch(e){
+      print(e);
+    }setState(() {
+      wait=false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    dB=DbHelper();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +63,8 @@ class _PerticaularCaseState extends State<PerticaularCase> {
     {
       thisCase=map['case'];
       visited=true;
+      getDetails();
+      print("Hello");
     }
 
     return Scaffold(
@@ -82,7 +126,7 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                 
                 Row(
                   children: <Widget>[
-                    Text("Message: "),
+                    Text("Message to Client: "),
                     Switch(
                       value: thisCase.messagePermission,
                       onChanged: (bool value){
@@ -100,14 +144,19 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                     MaterialButton(
                       child: Text("Add Date"),
                       onPressed: (){},
+                      color:Colors.green,
                     ),
                     MaterialButton(
                       child: Text("Edit Case"),
                       onPressed: (){},
+                      color:Colors.orange,
                     ),
                     MaterialButton(
                       child: Text("Delete Case"),
-                      onPressed: (){},
+                      onPressed: (){
+                        deleteCase(thisCase.id);
+                      },
+                      color:Colors.red,
                     ),
                   ],
                 ),
@@ -116,7 +165,9 @@ class _PerticaularCaseState extends State<PerticaularCase> {
           ),
           SizedBox(height:20),
           ListView.builder(
-            itemCount: thisCase.details.length,
+            shrinkWrap: true,
+            physics: ScrollPhysics(),
+            itemCount: thisCase.details==null?0:thisCase.details.length,
             itemBuilder: (context,index){
               return Card(
                 child: InkWell(

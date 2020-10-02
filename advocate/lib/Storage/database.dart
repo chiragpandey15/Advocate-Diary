@@ -22,6 +22,8 @@ class DbHelper{
   static const registeredDate='registeredDate';
   static const messagePermission='messsagePermission';
   static const firstDate='firstDate';
+  static const description="description";
+  
   
   //*********************************************************** */
   
@@ -32,7 +34,7 @@ class DbHelper{
   static const stage='stage';
   static const extraNote='extraNote';
   static const paymentDemand='paymentDemand';
-  static const nextDate='nextDate';
+  static const previousDate='previousDate';
 
   Future<void>createTable(Database db) async{
     String sql='''CREATE TABLE $CaseTable
@@ -48,7 +50,8 @@ class DbHelper{
       $caseFee INTEGER DEFAULT 0,
       $registeredDate TEXT,
       $messagePermission INTEGER,
-      $firstDate TEXT
+      $firstDate TEXT,
+      $description TEXT
     )''';
 
     try{
@@ -68,7 +71,7 @@ class DbHelper{
       $stage TEXT,
       $extraNote TEXT,
       $paymentDemand TEXT,
-      $nextDate TEXT,
+      $previousDate TEXT,
       FOREIGN KEY($caseID) REFERENCES $CaseTable($caseId)
     )''';
     
@@ -148,10 +151,28 @@ class DbHelper{
           new Case(
             id,i['$caseNumber'],i['$clientName'],i['$clientMobile'],i['$opponent'],
             i['$weAre'],i['$courtName'],i['$courtNumber'],i['$caseFee'],i['$registeredDate'],
-            i['$messagePermission']=='1'?true:false,i['$firstDate']
+            i['$messagePermission']=='1'?true:false,i['$firstDate'],i['$description']
           )
         );
       }
+    }
+    return cases;
+  }
+
+  Future<List<Case>>getAllCase() async{
+    await initDatabse();
+    final  sql='''SELECT * from $CaseTable ORDER BY $caseId''';
+    final result=await db.rawQuery(sql);
+    List<Case>cases=List();
+    for(final i in result)
+    {
+      cases.add(
+        new Case(
+          i['$caseId'],i['$caseNumber'],i['$clientName'],i['$clientMobile'],i['$opponent'],
+          i['$weAre'],i['$courtName'],i['$courtNumber'],i['$caseFee'],i['$registeredDate'],
+          i['$messagePermission']=='1'?true:false,i['$firstDate'],i['$description']
+        )
+      );
     }
     return cases;
   }
@@ -167,7 +188,7 @@ class DbHelper{
     {
       details.add(
         Details(
-          detail['$detailsId'],detail['$date'],detail['$stage'],detail['$extraNote'],
+          detail['$detailsId'],detail['$date'],detail['$previousDate'],detail['$stage'],detail['$extraNote'],
           detail['$paymentDemand']
         )
       );
@@ -190,7 +211,8 @@ class DbHelper{
       ${DbHelper.caseFee},
       ${DbHelper.registeredDate},
       ${DbHelper.messagePermission},
-      ${DbHelper.firstDate}
+      ${DbHelper.firstDate},
+      ${DbHelper.description}
     )  
     VALUES
     (
@@ -204,7 +226,8 @@ class DbHelper{
       "${newCase.caseFee}",
       "${newCase.registeredDate}",
       "${newCase.messagePermission}",
-      "${newCase.firstDate}"
+      "${newCase.firstDate}",
+      "${newCase.description}"
     )''';
     
     final result=await db.rawQuery(sql);
@@ -220,7 +243,8 @@ class DbHelper{
       ${DbHelper.date},
       ${DbHelper.stage},
       ${DbHelper.extraNote},
-      ${DbHelper.paymentDemand}
+      ${DbHelper.paymentDemand},
+      ${DbHelper.previousDate}
     )  
     VALUES
     (
@@ -228,7 +252,8 @@ class DbHelper{
       "${detail.date}",
       "${detail.stage}",
       "${detail.extraNote}",
-      "${detail.paymentDemand}"
+      "${detail.paymentDemand}",
+      "${detail.previousDate}"
     )''';
     
     final result=await db.rawQuery(sql);
@@ -266,6 +291,7 @@ class DbHelper{
     ,${DbHelper.registeredDate}="${updatedCase.registeredDate}"
     ,${DbHelper.messagePermission}="${updatedCase.messagePermission}"
     ,${DbHelper.firstDate}="${updatedCase.firstDate}"
+    ,${DbHelper.description}="${updatedCase.description}"
      WHERE ${DbHelper.caseId}=$id
     ''';
     final result=await db.rawQuery(sql);
@@ -275,6 +301,7 @@ class DbHelper{
     await initDatabse();
     final sql='''UPDATE ${DbHelper.DetailsTable} SET 
     ${DbHelper.date}="${detail.date}"
+    ,${DbHelper.previousDate}="${detail.previousDate}"
     ,${DbHelper.stage}="${detail.stage}"
     ,${DbHelper.extraNote}="${detail.extraNote}"
     ,${DbHelper.paymentDemand}="${detail.paymentDemand}"

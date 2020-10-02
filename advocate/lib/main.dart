@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:advocate/Login/pay.dart';
+import 'package:advocate/searchByClient.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -30,7 +31,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/pay':(context)=>Pay(),
         '/addCase':(context)=>AddCase(),
-        '/perticularCase':(context)=>PerticaularCase()
+        '/perticularCase':(context)=>PerticaularCase(),
+        '/searchByClient':(context)=>SearchByClient()
       },
     );
   }
@@ -325,7 +327,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
             Card(
               child: InkWell(
-                onTap:(){},
+                onTap:(){
+                  Navigator.pushNamed(context, '/searchByClient',);
+                },
                 child:Row(
                     children: <Widget>[
                       Icon(Icons.search_rounded),
