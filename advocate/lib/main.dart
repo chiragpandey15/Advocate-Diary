@@ -6,6 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:toast/toast.dart';
 import 'package:advocate/Login/login.dart';
+import 'package:advocate/Case/case.dart';
+import 'package:advocate/Storage/database.dart';
+import 'package:advocate/addCase.dart';
+import 'package:advocate/perticaularCase.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -24,6 +29,8 @@ class MyApp extends StatelessWidget {
       home: MyHomePage(),
       routes: {
         '/pay':(context)=>Pay(),
+        '/addCase':(context)=>AddCase(),
+        '/perticularCase':(context)=>PerticaularCase()
       },
     );
   }
@@ -37,6 +44,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   
+  List<Case>todaysCase=List();
+  bool wait=false;
 
   Future<void>validateFromServer()async{
     try{
@@ -194,11 +203,63 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: null
           ),
           SizedBox(width:20),
+          IconButton(
+            icon: Icon(Icons.login), 
+            onPressed: (){
+              DbHelper dB=DbHelper();
+              dB.log();
+            }
+          ),
         ],
       ),
-      body: Text(""),
+      body: wait==true?Center(
+        child:CircularProgressIndicator(),
+      ):
+      ListView.builder(
+        itemCount: todaysCase.length,
+        itemBuilder: (context,index){
+          return Card(
+            child: InkWell(
+              onTap: (){
+                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':todaysCase[index]});
+              },
+              child:Column(
+                children:<Widget>[
+                  CircleAvatar(
+                    backgroundColor: Colors.amberAccent,
+                    child: Text(
+                      todaysCase[index].caseNumber.toString()
+                      )
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children:<Widget>[
+                      Text(
+                        todaysCase[index].clientName,
+                      ),
+                    ]
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children:<Widget>[
+                      Text(
+                        "vs "+todaysCase[index].opponent,
+                        style: TextStyle(
+                          color:Colors.grey,
+                        ),
+                      ),
+                    ]
+                  ),
+                ]
+              ),
+            ),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton(
-                              onPressed: null,
+                              onPressed: (){
+                                Navigator.pushNamed(context, '/addCase',);
+                              },
                               child: Icon(Icons.add),
                             ),
       drawer: Drawer(
@@ -217,7 +278,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Card(
               child: InkWell(
-                onTap:(){},
+                onTap:(){
+                  Navigator.pushNamed(context, '/addCase',);
+                },
                 child:Row(
                     children: <Widget>[
                       Icon(Icons.book),
@@ -287,4 +350,27 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  Future<void>getCases()async{
+    try{
+      
+      setState(() {
+        wait=true;
+      });
+
+      String date=DateTime.now().day.toString()+"-"+DateTime.now().month.toString()+"-"+DateTime.now().year.toString();
+      DbHelper dB=DbHelper();
+      dB.getCaseByDate(date).then((value){
+        todaysCase=value;
+      });
+
+    }catch(e){
+      print(e);
+    }finally{
+      setState(() {
+        wait=false;
+      });
+    }
+  }
+
 }
