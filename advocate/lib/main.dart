@@ -9,10 +9,12 @@ import 'package:toast/toast.dart';
 import 'package:advocate/Login/login.dart';
 import 'package:advocate/Case/case.dart';
 import 'package:advocate/Storage/database.dart';
+import 'package:advocate/Storage/driveStorage.dart';
 import 'package:advocate/addCase.dart';
 import 'package:advocate/perticaularCase.dart';
 
-
+import 'dart:io';
+import 'package:sqflite/sqflite.dart';
 void main() {
   runApp(MyApp());
 }
@@ -170,6 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
       // prefs.clear();
       if(prefs.getString("login")==null)
       {
+        
         Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context)=>Login()),(Route<dynamic> route)=>false);
       }
       else
@@ -202,7 +205,11 @@ class _MyHomePageState extends State<MyHomePage> {
               Icons.calendar_today_rounded,
               size: 35,
             ),
-            onPressed: null
+            onPressed: ()async{
+              DriveStorage dS=DriveStorage();
+              await dS.updateToDrive();
+              print("Update Ho gaya dude");
+            }
           ),
           SizedBox(width:20),
           IconButton(
@@ -210,6 +217,26 @@ class _MyHomePageState extends State<MyHomePage> {
             onPressed: (){
               DbHelper dB=DbHelper();
               dB.log();
+            }
+          ),
+          SizedBox(width:20),
+          IconButton(
+            icon: Icon(Icons.outbond), 
+            onPressed: ()async{
+              String path=await getDatabasesPath();
+              File f=File(path+"/advocate.db");
+              List<int>read=await f.readAsBytes();
+              print(read);
+              
+              DriveStorage dS=DriveStorage();
+              await dS.downloadGoogleDriveFile();
+              print("Downloaded wala upper hai aur read wala niche");
+              
+              
+              // File temp=File(p);
+              // String read=await temp.readAsString();
+              // print("File read");
+              // print(read);
             }
           ),
         ],

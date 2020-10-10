@@ -1,13 +1,13 @@
-import 'dart:io';
 
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-// import 'package:path_provider/path_provider.dart';
 import 'package:advocate/Case/case.dart';
+import 'package:advocate/Storage/driveStorage.dart';
 
-
-// Database db;
 class DbHelper{
+
+  String path;
   Database db;
   static const CaseTable='CaseTable';
   static const caseId='id';
@@ -56,6 +56,7 @@ class DbHelper{
 
     try{
       await db.execute(sql);
+      print("Table kitni baar create karo ge");
     }catch(e){
       print("CREATE TABLE 1");
       print(e);
@@ -91,7 +92,6 @@ class DbHelper{
     try{
       if(await Directory(dirname(path)).exists())
       {
-        // await deleteDatabase(path);
         return path;
       }
       else
@@ -106,9 +106,10 @@ class DbHelper{
   }
 
   Future<void>initDatabse() async{
-    final path=await getDatabasePath('Case');
+    path=await getDatabasePath('advocate.db');
+    print(path);
     db=await openDatabase(path,version:1,onCreate: onCreate);
-    // print (db);
+    
   }
 
   Future<void>onCreate(Database db,int version) async {
@@ -118,8 +119,19 @@ class DbHelper{
 
   Future<void>log()async{
     await initDatabse();
+
+    String dirPath=await getDatabasesPath();
+
+    DriveStorage ds=DriveStorage();
+    await ds.uploadFile(dirPath);
+
+    print("Done Sucessfully");
+    await ds.listGoogleDriveFiles();
+
     String sql='''SELECT * FROM ${DbHelper.CaseTable}''';
     final data=await db.rawQuery(sql);
+    print("Data");
+    print(data);
     for(final x in data)
     {
       print(x);
@@ -163,6 +175,8 @@ class DbHelper{
     await initDatabse();
     final  sql='''SELECT * from $CaseTable ORDER BY $caseId''';
     final result=await db.rawQuery(sql);
+    print("Result");
+    print(result);
     List<Case>cases=List();
     for(final i in result)
     {
