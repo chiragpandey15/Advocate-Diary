@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:advocate/Case/case.dart';
 import 'package:advocate/Storage/database.dart';
+import 'package:toast/toast.dart';
 
 class AddCase extends StatefulWidget {
   @override
@@ -11,13 +12,11 @@ class _AddCaseState extends State<AddCase> {
 
   List<String>option=["Applicant","Respondent"];
   bool wait=false;
-  int caseNumber,courtNumber,caseFee,weAre=0;
-  String clientName="",clientMobile="",opponent="",courtName="",firstDate="",description="";
+  int caseFee,weAre=0;
+  String clientName="",clientMobile="",opponent="",opponentAdvocate="",courtName="",firstDate="",description="",caseNumber="",courtNumber="";
 
-  //For Test
-  String registeredDate;
 
-  Future<void>add(){
+  Future<void>add()async{
     try{
 
       setState(() {
@@ -26,10 +25,15 @@ class _AddCaseState extends State<AddCase> {
       // Check Payment
 
       DbHelper dB=DbHelper();
-      dB.addCase(
-        Case(0,caseNumber,clientName,clientMobile,opponent,option[weAre],courtName,courtNumber,
-        caseFee,registeredDate,true,firstDate,description)
+      await dB.addCase(
+        Case(0,caseNumber,clientName,clientMobile,option[weAre],opponent,opponentAdvocate,courtName,courtNumber,
+        caseFee,true,description)
       );      
+
+      // Toast
+      Toast.show("Case successfully added",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+      Navigator.of(context).pop(0);
+      //Navigate back
 
     }catch(e){
       print(e);
@@ -39,6 +43,7 @@ class _AddCaseState extends State<AddCase> {
       });
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +56,12 @@ class _AddCaseState extends State<AddCase> {
         padding: const EdgeInsets.fromLTRB(12, 8, 23, 0),
         child: ListView(
           children: <Widget>[
+                    Text(
+                      "Case Number",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                     TextFormField(
                     decoration: InputDecoration(
                       hintText: "Case Number",
@@ -61,12 +72,17 @@ class _AddCaseState extends State<AddCase> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    keyboardType: TextInputType.number,
                     onChanged: (s){
-                        caseNumber=int.parse(s);
+                        caseNumber=s;
                     },
                 ),
-                SizedBox(height:10),
+                SizedBox(height:20),
+                Text(
+                      "Client Name*",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Client Name",
@@ -82,7 +98,13 @@ class _AddCaseState extends State<AddCase> {
                         clientName=s;
                     },
                 ),
-                SizedBox(height:10),    
+                SizedBox(height:20),
+                Text(
+                      "Client Mobile Number*",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Client Mobile Number",
@@ -98,7 +120,7 @@ class _AddCaseState extends State<AddCase> {
                         clientMobile=s;
                     },
                 ),
-                SizedBox(height:10),
+                SizedBox(height:20),
                 Row(
                   children: <Widget>[
                     Text(
@@ -138,7 +160,13 @@ class _AddCaseState extends State<AddCase> {
                     ),
                   ],
                 ),
-                SizedBox(height:10),
+                SizedBox(height:20),
+                Text(
+                      "Opponent Name",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Opponent Name",
@@ -154,7 +182,35 @@ class _AddCaseState extends State<AddCase> {
                         opponent=s;
                     },
                 ),
-                SizedBox(height:10),    
+                SizedBox(height:20),    
+                Text(
+                      "Opponent Adv.",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
+                TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Opponent Adv.",
+                      hintStyle: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    keyboardType: TextInputType.name,
+                    onChanged: (s){
+                        opponentAdvocate=s;
+                    },
+                ),
+                SizedBox(height:20),    
+                Text(
+                      "Court Name",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Court Name",
@@ -170,7 +226,13 @@ class _AddCaseState extends State<AddCase> {
                         courtName=s;
                     },
                 ),
-                SizedBox(height:10),
+                SizedBox(height:20),
+                Text(
+                      "Court Number",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Court Number",
@@ -181,13 +243,17 @@ class _AddCaseState extends State<AddCase> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    keyboardType: TextInputType.number,
                     onChanged: (s){
-                        courtNumber=int.parse(s);
+                        courtNumber=s;
                     },
                 ),
-                SizedBox(height:10),
-
+                SizedBox(height:20),
+                Text(
+                      "Case Fee",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Case Fee",
@@ -203,7 +269,13 @@ class _AddCaseState extends State<AddCase> {
                         caseFee=int.parse(s);
                     },
                 ),
-                SizedBox(height:10),
+                SizedBox(height:20),
+                Text(
+                      "Description",
+                      style: TextStyle(
+                        color:Colors.red,
+                      ),
+                    ),
                 TextFormField(
                     decoration: InputDecoration(
                       hintText: "Description",
@@ -227,7 +299,20 @@ class _AddCaseState extends State<AddCase> {
                       width: 80,
                       child: MaterialButton(
                         onPressed: (){
-                          add();
+                          if(checkMobile(clientMobile))
+                          {
+                            if(caseNumber=="")
+                              Toast.show("Case Number is required",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+                            else if(clientName=="")
+                              Toast.show("Client Name is required",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+                            else   
+                              add();
+                          }
+                          else
+                          {
+                            // Toast 
+                            Toast.show("Please check the client's mobile number",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+                          }
                         },
                         child: Text("Add"),
                         color: Colors.amberAccent,
@@ -239,5 +324,19 @@ class _AddCaseState extends State<AddCase> {
         ),
       ),
     );
+  }
+
+  bool checkMobile(String m)
+  {
+    if(m.length!=10)
+      return false;
+
+    for(int i=0;i<10;i++)
+    {
+      if(m[i]!='0' && m[i]!='1' && m[i]!='2' && m[i]!='3' && m[i]!='4' && m[i]!='5' && m[i]!='6' && 
+      m[i]!='7' && m[i]!='8' && m[i]!='9')
+        return false;
+    }
+    return true;   
   }
 }

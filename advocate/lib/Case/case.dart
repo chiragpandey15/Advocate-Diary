@@ -1,5 +1,6 @@
 class Details{
   int id;
+  int number;
   String date;
   String previousDate;
   String stage;
@@ -44,17 +45,16 @@ class Details{
 
 class Case{
   int id;
-  int caseNumber;
+  String caseNumber;
   String clientName;
   String clientMobile;
-  String opponent;
   String weAre;
+  String opponent;
+  String opponentAdvocate;
   String courtName;
-  int courtNumber;
+  String courtNumber;
   int caseFee;
-  String registeredDate;
   bool messagePermission;
-  String firstDate;
   String description;
   List<Details>details;
 
@@ -64,26 +64,15 @@ class Case{
       this.caseNumber,
       this.clientName,
       this.clientMobile,
-      this.opponent,
       this.weAre,
+      this.opponent,
+      this.opponentAdvocate,
       this.courtName,
       this.courtNumber,
       this.caseFee,
-      this.registeredDate,
       this.messagePermission,
-      this.firstDate,
       this.description
     );
-
-    Case.fromJson(Map<String,dynamic>json)
-    {
-      // this.id=json[DbHelper.id];
-      // this.topic=json[DbHelper.topic];
-      // this.description=json[DbHelper.description];
-      // this.startTime=json[DbHelper.startTime];
-      // this.endTime=json[DbHelper.endTime];
-      // this.day=json[DbHelper.day];
-    }
 
     int getID(){
       return this.id;
@@ -109,11 +98,11 @@ class Case{
       return this.courtName;
     }
 
-    int getCourtNumber(){
+    String getCourtNumber(){
       return this.courtNumber;
     }
 
-    int getCaseNumber(){
+    String getCaseNumber(){
       return this.caseNumber;
     }
 
@@ -121,17 +110,13 @@ class Case{
       return this.caseFee;
     }
 
-    String getregisteredDate(){
-      return this.registeredDate;
-    }
+    
 
     bool getMessagePermission(){
       return this.messagePermission;
     }
 
-    String getFirstDate(){
-      return this.firstDate;
-    }
+    
 
     
 

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:advocate/Case/case.dart';
 
-class Page extends StatefulWidget {
+class Pages extends StatefulWidget {
   @override
-  _PageState createState() => _PageState();
+  _PagesState createState() => _PagesState();
 }
 
-class _PageState extends State<Page> {
+class _PagesState extends State<Pages> {
 
   Case thisCase;
   Map map;
@@ -21,7 +21,7 @@ class _PageState extends State<Page> {
     if(visited==false)
     {
       thisCase=map['case'];
-      current=map['currentPage'];
+      current=map['currentPages'];
       visited=true;
     }
 
@@ -36,11 +36,8 @@ class _PageState extends State<Page> {
             child:Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                CircleAvatar(
-                  child: Text(
-                    thisCase.caseNumber.toString()
-                  ),
-                  backgroundColor: Colors.amberAccent,
+                Text(
+                  thisCase.caseNumber.toString()
                 ),
                 Column(
                   children: <Widget>[
@@ -64,13 +61,15 @@ class _PageState extends State<Page> {
           SizedBox(height:20),
           Card(
             child: Column(
+              mainAxisSize: MainAxisSize.max,
               children: <Widget>[
                 Text(
                   "Date: "+thisCase.details[current].date
                 ),
                 SizedBox(height: 10,),
+                SizedBox(height: 10,),
                 Text(
-                  current==thisCase.details.length-1?'':"Previous Date: "+thisCase.details[current+1].date
+                  current==thisCase.details.length-1?thisCase.details[current].previousDate!=""?"Previous Date: "+thisCase.details[current].previousDate:"":"Previous Date: "+thisCase.details[current+1].date
                 ),
                 SizedBox(height: 10,),
                 Text(
@@ -113,11 +112,25 @@ class _PageState extends State<Page> {
             children: <Widget>[
               IconButton(
                 icon: Icon(Icons.arrow_back_ios), 
-                onPressed: null
+                onPressed: (){
+                  if(current<thisCase.details.length-1)
+                  {
+                    setState(() {
+                      current++;
+                    });
+                  }
+                }
               ),
               IconButton(
                 icon: Icon(Icons.arrow_forward_ios), 
-                onPressed: null
+                onPressed: (){
+                  if(current>0)
+                  {
+                    setState(() {
+                      current--;
+                    });
+                  }
+                }
               ),
             ],
           ),  

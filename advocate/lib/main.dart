@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:advocate/Login/pay.dart';
+import 'package:advocate/caseByDate.dart';
+import 'package:advocate/editCase.dart';
+import 'package:advocate/editDate.dart';
 import 'package:advocate/searchByClient.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +15,11 @@ import 'package:advocate/Storage/database.dart';
 import 'package:advocate/Storage/driveStorage.dart';
 import 'package:advocate/addCase.dart';
 import 'package:advocate/perticaularCase.dart';
+import 'package:advocate/page.dart';
+import 'package:advocate/addDate.dart';
+import 'package:advocate/Message/message.dart';
+import 'package:advocate/Message/perticularMessage.dart';
+import 'package:advocate/Message/sendSMS.dart';
 
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
@@ -34,7 +42,14 @@ class MyApp extends StatelessWidget {
         '/pay':(context)=>Pay(),
         '/addCase':(context)=>AddCase(),
         '/perticularCase':(context)=>PerticaularCase(),
-        '/searchByClient':(context)=>SearchByClient()
+        '/searchByClient':(context)=>SearchByClient(),
+        '/searchByDate':(context)=>CaseByDate(),
+        '/editCase':(context)=>EditCase(),
+        '/editDetails':(context)=>EditDate(),
+        '/page':(context)=>Pages(),
+        '/addDetails':(context)=>AddDate(),
+        '/message':(context)=>Message(),
+        '/perticularMessage':(context)=>PerticularMessage(),
       },
     );
   }
@@ -46,7 +61,7 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   
   List<Case>todaysCase=List();
   bool wait=false;
@@ -122,13 +137,29 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             }
 
-            // Fetch Data
-
-
           });
   }
 
-  
+  Future<void>getTodaysList()async{
+    try{
+      setState(() {
+        wait=true;
+      });
+      print("Here we are");
+      DateTime now =DateTime.now();
+      String today=now.year.toString()+"-"+now.month.toString()+"-"+now.day.toString();
+      print(today);
+      DbHelper dB=DbHelper();
+      todaysCase=await dB.getCaseByDate(today);
+      print(todaysCase);
+    }catch(e){
+      print(e);
+    }finally{
+      setState((){
+        wait=false;
+      });
+    }
+  }
 
   Future<void>checkPayment()async{
     try{
@@ -152,9 +183,8 @@ class _MyHomePageState extends State<MyHomePage> {
           pay();
         } 
         validateFromServer();
-
+        getTodaysList();
         // Fetch Data
-
 
       }
       else
@@ -187,14 +217,107 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  String getMessage(String msg){
+    String exp="";
+    DateTime now=DateTime.now();
+    now=now.add(Duration(days: 1));
+    String date=now.day.toString()+"-"+now.month.toString()+"-"+now.year.toString();
+    
+    for(int i=0;i<msg.length;i++)
+    {
+      if(i<msg.length-1 && msg[i]=="#" && (msg[i+1]=='1' || msg[i+1]=='2' || msg[i+1]=='3' || msg[i+1]=='4'))
+      {
+        exp+=date;
+        i++;
+      }
+      else
+        exp=exp+msg[i];
+    }
+    return exp;
+  }
+
+  Future<void>sendReminder()async{
+    try{
+      DbHelper dB=DbHelper();
+      Map msg=await dB.getMessage(2);
+      String messageText=msg['textMessage'];
+      int allowed=msg['allowed'];
+      if(allowed==1)
+      {
+        String message=getMessage(messageText);
+        
+        DateTime now=DateTime.now().add(Duration(days: 1));
+        String today=now.year.toString()+"-"+now.month.toString()+"-"+now.day.toString();
+        
+        List<Case> tomorrowCase=await dB.getCaseByDate(today);
+        
+        SendSMS sms=SendSMS();
+        for(int i=0;i<tomorrowCase.length;i++)
+        {
+          if(tomorrowCase[i].messagePermission==true)
+          {
+            sms.send(message,tomorrowCase[i].clientMobile);
+          }
+        }
+      }
+
+
+    }catch(e){
+      print(e);
+    }
+  }
+
+  Future<void>checkReminder()async{
+    try{
+
+      DateTime now=DateTime.now();
+      print(now.hour);
+      if(now.hour>17)
+      {
+        SharedPreferences prefs = await SharedPreferences.getInstance(); 
+        String reminderLastDate=prefs.getString("reminderLastDate");
+        String nowString=now.day.toString()+"-"+now.month.toString()+"-"+now.year.toString();
+        
+        if(nowString==reminderLastDate)
+          return;
+
+        sendReminder();
+        await prefs.setString("reminderLastDate",nowString);  
+      }
+
+      
+
+
+    }catch(e){
+      print(e);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     checkLogin();
+    checkReminder();
+  }
+
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      checkReminder();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+
+    
     
     return Scaffold(
       appBar: AppBar(
@@ -206,9 +329,11 @@ class _MyHomePageState extends State<MyHomePage> {
               size: 35,
             ),
             onPressed: ()async{
-              DriveStorage dS=DriveStorage();
-              await dS.updateToDrive();
-              print("Update Ho gaya dude");
+              // DriveStorage dS=DriveStorage();
+              // await dS.updateToDrive();
+              // print("Update Ho gaya dude");
+
+              selectPreviousDate(context);
             }
           ),
           SizedBox(width:20),
@@ -254,11 +379,8 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child:Column(
                 children:<Widget>[
-                  CircleAvatar(
-                    backgroundColor: Colors.amberAccent,
-                    child: Text(
-                      todaysCase[index].caseNumber.toString()
-                      )
+                  Text(
+                    todaysCase[index].caseNumber.toString()
                     ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -320,7 +442,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Card(
               child: InkWell(
-                onTap:(){},
+                onTap:(){
+                  Navigator.pushNamed(context, '/message');
+                },
                 child:Row(
                     children: <Widget>[
                       Icon(Icons.message),
@@ -331,7 +455,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Card(
               child: InkWell(
-                onTap:(){},
+                onTap:(){
+                  DateTime now=DateTime.now().add(Duration(days: 1));
+                  String requireDate=now.year.toString()+"-"+now.month.toString()+"-"+now.day.toString();
+                  Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate});     
+                },
                 child:Row(
                     children: <Widget>[
                       Icon(Icons.bookmark),
@@ -342,7 +470,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Card(
               child: InkWell(
-                onTap:(){},
+                onTap:(){
+                  selectPreviousDate(context);
+                },
                 child:Row(
                     children: <Widget>[
                       Icon(Icons.calendar_today_rounded),
@@ -401,6 +531,21 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         wait=false;
       });
+    }
+  }
+
+  Future<void>selectPreviousDate(BuildContext context) async{
+    String requireDate="";
+    final DateTime picked = await showDatePicker(
+        context: context,
+        helpText: "Next Date",
+        initialDate: DateTime.now(),
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2032));
+    if (picked != null)
+    {
+      requireDate=picked.year.toString()+"-"+picked.month.toString()+"-"+picked.day.toString();
+      Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate});      
     }
   }
 

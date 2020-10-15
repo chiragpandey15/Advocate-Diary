@@ -106,7 +106,6 @@ class DriveStorage{
       for (var i = 0; i < list.files.length; i++) {  
         File file=File(dirPath+"/"+list.files[i].name);
         ga.File fileToUpload= ga.File();
-        // fileToUpload.parents = ["appDataFolder"];
         fileToUpload.name = list.files[i].name; 
 
         drive.files.update(
