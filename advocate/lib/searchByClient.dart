@@ -65,35 +65,40 @@ class _SearchByClientState extends State<SearchByClient> {
           return Card(
             child: InkWell(
               onTap: (){
-                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':cases[index]});
+                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':cases[index]}).then((s){
+                  getCases();
+                });
               },
               child:Column(
                 children:<Widget>[
                   Text(
-                    cases[index].caseNumber,
+                      cases[index].caseNumber.toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children:<Widget>[
                       Text(
                         cases[index].clientName,
-                        style:TextStyle(
-                          fontSize: 18
-                        )
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
                       ),
                     ]
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children:<Widget>[
+                      cases[index].opponent==""?Text(''):
                       Text(
                         "vs "+cases[index].opponent,
                         style: TextStyle(
                           color:Colors.grey,
-                          fontSize: 16,
+                          fontSize: 18,
                         ),
                       ),
-                      SizedBox(width: 25,)
                     ]
                   ),
                 ]
@@ -139,7 +144,7 @@ class Search extends SearchDelegate{
   @override
   Widget buildSuggestions(BuildContext context) {
     
-    List<Case>suggesstion=List();
+    // List<Case>suggesstion=cases;
 
     if(query!="")
     {

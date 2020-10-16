@@ -92,6 +92,19 @@ class _PerticularMessageState extends State<PerticularMessage> {
           Text("#4 for client name"),
           SizedBox(height:30),
           Text("Example Text"),
+          Row(
+            children: [
+              Text("Permission"),
+              SizedBox(width:10),
+              Switch(
+                value:permission==0?false:true,
+                onChanged: (s){
+                  permission=(permission+1)%2;
+                },
+              ),
+            ],
+          ),
+          SizedBox(height:15),
           Text(example),
           SizedBox(height:50),
           TextFormField(

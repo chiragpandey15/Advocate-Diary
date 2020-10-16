@@ -65,7 +65,7 @@ class _AddDateState extends State<AddDate> {
       // Toast
       Toast.show("Date successfully added",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
       // Navigate Back
-      Navigator.of(context).pop(1);
+      Navigator.of(context).pop();
     }catch(e){
 
     }finally{

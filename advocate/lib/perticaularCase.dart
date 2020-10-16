@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:advocate/Case/case.dart';
 import 'package:advocate/Storage/database.dart';
+import 'package:toast/toast.dart';
 
 class PerticaularCase extends StatefulWidget {
   @override
@@ -22,6 +23,8 @@ class _PerticaularCaseState extends State<PerticaularCase> {
       
       await dB.deleteCase(id);
       // Toast
+      Toast.show("Case successfully deleted",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+      Navigator.of(context).pop();
       //Navigate Back
 
     }catch(e){
@@ -57,6 +60,7 @@ class _PerticaularCaseState extends State<PerticaularCase> {
       });
       
       await dB.deleteDetails(id);
+      getDetails();
 
     }catch(e){
 
@@ -68,15 +72,19 @@ class _PerticaularCaseState extends State<PerticaularCase> {
   }
 
   void editCase(){
-    Navigator.pushNamed(context, '/editCase',arguments: {'case':thisCase}); 
+    Navigator.pushNamed(context, '/editCase',arguments: {'case':thisCase});
   }
   
   void editDetails(int indx){
-    Navigator.pushNamed(context, '/editDetails',arguments: {'details':thisCase.details[indx],'caseId':thisCase.id}); 
+    Navigator.pushNamed(context, '/editDetails',arguments: {'details':thisCase.details[indx],'caseId':thisCase.id}).then((value){
+      getDetails();
+    });  
   }
   
   void addDate(){
-   Navigator.pushNamed(context, '/addDetails',arguments: {'caseId':thisCase.id}); 
+   Navigator.pushNamed(context, '/addDetails',arguments: {'caseId':thisCase.id}).then((value){
+      getDetails();
+    }); 
   }
 
 
@@ -137,16 +145,20 @@ class _PerticaularCaseState extends State<PerticaularCase> {
               children: <Widget>[
                 Text(
                   thisCase.clientName+ "  ("+thisCase.clientMobile+")",
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
                 ),
                 SizedBox(height:10),
+                thisCase.opponent=="" &&thisCase.opponentAdvocate==""?Text(''):
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "opp.: "+thisCase.opponent,
+                      thisCase.opponent==""?"":"opp.: "+thisCase.opponent,
                     ),
                     Text(
-                      "Opp. Adv."+thisCase.opponentAdvocate
+                      thisCase.opponentAdvocate==""?"":"Opp. Adv."+thisCase.opponentAdvocate
                     ),
                     SizedBox(width:5),    
                   ],
@@ -157,11 +169,11 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                 ),
                 SizedBox(height:10),
                 Text(
-                  "Court Name: "+thisCase.courtName+ ", "+thisCase.courtNumber.toString(),
+                  thisCase.courtName==""?"":"Court Name: "+thisCase.courtName+ ", "+thisCase.courtNumber.toString(),
                 ),
                 SizedBox(height:10),
                 Text(
-                  "Description: "+thisCase.description
+                  thisCase.description==""?"":"Description: "+thisCase.description
                 ),
 
                 SizedBox(height:20),
@@ -170,7 +182,7 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                   children: <Widget>[
                     Text("Message to Client: "),
                     Switch(
-                      value: !thisCase.messagePermission,
+                      value: thisCase.messagePermission,
                       onChanged: (bool value){
                         setState(() {
                           thisCase.messagePermission=value;
@@ -249,15 +261,23 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                 child: InkWell(
                   onTap: (){
                     // Go to details Page
-                    Navigator.pushNamed(context, '/page',arguments: {'case':thisCase,"currentPages":index});
+                    Navigator.pushNamed(context, '/page',arguments: {'case':thisCase,"currentPages":index}).then((value){
+                      getDetails();
+                    });
                   },
                   child: Column(
                     children:<Widget>[
                       Text(
-                        getDate(thisCase.details[index].date)
+                        getDate(thisCase.details[index].date),
+                        style:TextStyle(
+                          fontSize: 18,
+                        )
                       ),
                       Text(
-                        thisCase.details[index].stage
+                        thisCase.details[index].stage,
+                        style:TextStyle(
+                          fontSize: 18,
+                        ),
                       ),
                       SizedBox(height:30),
                       Row(

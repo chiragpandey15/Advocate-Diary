@@ -375,28 +375,38 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
           return Card(
             child: InkWell(
               onTap: (){
-                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':todaysCase[index]});
+                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':todaysCase[index]}).then((s){
+                  getTodaysList();
+                });
               },
               child:Column(
                 children:<Widget>[
                   Text(
-                    todaysCase[index].caseNumber.toString()
+                      todaysCase[index].caseNumber.toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children:<Widget>[
                       Text(
                         todaysCase[index].clientName,
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
                       ),
                     ]
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children:<Widget>[
+                      todaysCase[index].opponent==""?Text(''):
                       Text(
                         "vs "+todaysCase[index].opponent,
                         style: TextStyle(
                           color:Colors.grey,
+                          fontSize: 18,
                         ),
                       ),
                     ]
@@ -458,7 +468,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 onTap:(){
                   DateTime now=DateTime.now().add(Duration(days: 1));
                   String requireDate=now.year.toString()+"-"+now.month.toString()+"-"+now.day.toString();
-                  Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate});     
+                  Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate}).then((value){
+                    getTodaysList();
+                  });     
                 },
                 child:Row(
                     children: <Widget>[
@@ -485,7 +497,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
             Card(
               child: InkWell(
                 onTap:(){
-                  Navigator.pushNamed(context, '/searchByClient',);
+                  Navigator.pushNamed(context, '/searchByClient',).then((value){
+                    getTodaysList();
+                  });
                 },
                 child:Row(
                     children: <Widget>[
@@ -545,7 +559,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     if (picked != null)
     {
       requireDate=picked.year.toString()+"-"+picked.month.toString()+"-"+picked.day.toString();
-      Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate});      
+      Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate}).then((value){
+        getTodaysList();
+      });      
     }
   }
 

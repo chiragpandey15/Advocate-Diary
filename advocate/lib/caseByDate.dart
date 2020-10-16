@@ -35,6 +35,13 @@ class _CaseByDateState extends State<CaseByDate> {
     }
   }
 
+  String getDate(String date)
+  {
+    DateTime temp=DateTime.parse(date);
+    String res=temp.day.toString()+"-"+temp.month.toString()+"-"+temp.year.toString();
+    return res;
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -48,7 +55,7 @@ class _CaseByDateState extends State<CaseByDate> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(date),
+        title: Text(getDate(date)),
       ),
       body: wait==true?Center(child:CircularProgressIndicator()):
       ListView.builder(
@@ -57,28 +64,38 @@ class _CaseByDateState extends State<CaseByDate> {
           return Card(
             child: InkWell(
               onTap: (){
-                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':casesByDate[index]});
+                Navigator.pushNamed(context, '/perticularCase',arguments: {'case':casesByDate[index]}).then((s){
+                  getCasesByDate(date);
+                });
               },
               child:Column(
                 children:<Widget>[
                   Text(
-                    casesByDate[index].caseNumber.toString()
+                      casesByDate[index].caseNumber.toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children:<Widget>[
                       Text(
                         casesByDate[index].clientName,
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
                       ),
                     ]
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children:<Widget>[
+                      casesByDate[index].opponent==""?Text(''):
                       Text(
                         "vs "+casesByDate[index].opponent,
                         style: TextStyle(
                           color:Colors.grey,
+                          fontSize: 18,
                         ),
                       ),
                     ]
@@ -87,7 +104,7 @@ class _CaseByDateState extends State<CaseByDate> {
               ),
             ),
           );
-        }
+        },
       ),
     );
   }
