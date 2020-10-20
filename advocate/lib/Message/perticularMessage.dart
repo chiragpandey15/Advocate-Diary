@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:advocate/Storage/database.dart';
+import 'package:toast/toast.dart';
 
 class PerticularMessage extends StatefulWidget {
   @override
@@ -51,6 +52,11 @@ class _PerticularMessageState extends State<PerticularMessage> {
     });
     DbHelper dB=DbHelper();
     await dB.updateMessage(id,text,permission);
+
+
+    Toast.show("Message successfully saved",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+    Navigator.of(context).pop();
+
     setState((){
       wait=false;
     });
@@ -83,63 +89,121 @@ class _PerticularMessageState extends State<PerticularMessage> {
         title:Text("Message"),
       ),
       body:wait==true?Center(child: CircularProgressIndicator()):
-       ListView(
-        children:[
-          Text("Use"),
-          Text("#1 for Date"),
-          Text("#2 for Time"),
-          Text("#3 for payment"),
-          Text("#4 for client name"),
-          SizedBox(height:30),
-          Text("Example Text"),
-          Row(
-            children: [
-              Text("Permission"),
-              SizedBox(width:10),
-              Switch(
-                value:permission==0?false:true,
-                onChanged: (s){
-                  permission=(permission+1)%2;
-                },
+       Padding(
+         padding: const EdgeInsets.all(8.0),
+         child: ListView(
+          children:[
+            Text(
+              "Use",
+              style: TextStyle(
+                fontSize:20,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
-          SizedBox(height:15),
-          Text(example),
-          SizedBox(height:50),
-          TextFormField(
-                    initialValue: text,
-                    decoration: InputDecoration(
-                      hintText: "Message",
-                      hintStyle: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    maxLines: 3,
-                    onChanged: (s){
-                        text=s;
-                        setState((){
-                          example=getExample(text);
-                        });
-                    },
+            ),
+            SizedBox(height:10),
+            Text(
+              "#1 for Date",
+              style: TextStyle(
+                fontSize:20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height:10),
+            Text(
+              "#2 for Time",
+              style: TextStyle(
+                fontSize:20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height:10),
+            Text(
+              "#3 for payment",
+              style: TextStyle(
+                fontSize:20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height:10),
+            Text(
+              "#4 for client name",
+              style: TextStyle(
+                fontSize:20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height:30),
+            Row(
+              children: [
+                Text("Permission"),
+                SizedBox(width:10),
+                Switch(
+                  value:permission==0?false:true,
+                  onChanged: (s){
+                    permission=(permission+1)%2;
+                  },
                 ),
-          SizedBox(height:30),
-          MaterialButton(
-            onPressed: (){
-              if(text!="")
-              {
-                saveMessage();
-              }
-            },
-            child: Text("Save"),
-            color: Colors.amberAccent,
-          ),
+              ],
+            ),
+            SizedBox(height:10),
+            Text(
+              "Example Text",
+              style: TextStyle(
+                fontSize:18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(height:10),
+            Text(
+              example,
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey,
+              ),
+            ),
+            SizedBox(height:50),
+            TextFormField(
+                      initialValue: text,
+                      decoration: InputDecoration(
+                        hintText: "Message",
+                        hintStyle: TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      maxLines: 3,
+                      onChanged: (s){
+                          text=s;
+                          setState((){
+                            example=getExample(text);
+                          });
+                      },
+                  ),
+            SizedBox(height:30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  child: MaterialButton(
+                    onPressed: (){
+                      if(text!="")
+                      {
+                        saveMessage();
+                      }
+                    },
+                    child: Text("Save"),
+                    color: Colors.amberAccent,
+                  ),
+                ),
+              ],
+            ),
 
-        ]
+          ]
       ),
+       ),
     );
   }
 }

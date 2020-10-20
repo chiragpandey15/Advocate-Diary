@@ -101,6 +101,9 @@ class _LoginState extends State<Login> {
     try{
       // var authClient= await clientViaUserConsent(ClientId(_clientId, _clientSecret), _scopes,(url){});
             
+      setState(() {
+        wait=true;
+      });      
       GoogleSignInAccount googleSignInAccount= await _googleSignIn.signIn();
       GoogleSignInAuthentication googleSignInAuthentication=await googleSignInAccount.authentication;
       AuthCredential credential=GoogleAuthProvider.getCredential(idToken: googleSignInAuthentication.idToken, accessToken: googleSignInAuthentication.accessToken);
@@ -110,8 +113,9 @@ class _LoginState extends State<Login> {
       
 
       DriveStorage dS=DriveStorage();
+      Toast.show("Wait while we get your previous saved data. Make sure your internet is working fine.",context,duration: 10,gravity: 4,backgroundColor: Colors.red);
       await dS.downloadGoogleDriveFile();
-      print("Shayed Hogaya Di");
+      
       /********************************************************************************** */
 
       // print("Current User");
@@ -150,7 +154,14 @@ class _LoginState extends State<Login> {
     }catch(e){
       print("Error");
       print(e);
+    }finally{
+      setState((){
+        wait=false;
+      });
     }
+
+
+
   }
 
   Future<void>googleSignOut()async{
@@ -175,22 +186,31 @@ class _LoginState extends State<Login> {
         title: Text("Login"),
       ),
       body: wait==true?Center(child:CircularProgressIndicator()):
-      Column(
-        children: [
-          OutlineButton(
-            onPressed: (){
-              handleSignIn();
-            },
-            child: Text("Sign in with Google"),
-          ),
-          SizedBox(height:30),
-          OutlineButton(
-            onPressed: (){
-              googleSignOut();
-            },
-            child: Text("Send SMS"),
-          ),
-        ]
+      Container(
+        decoration: BoxDecoration(
+          image:DecorationImage(
+            image:NetworkImage("http://www.bluepapaya.in/Images/image.jpg"),
+            fit:BoxFit.cover,
+          )
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                
+                MaterialButton(
+                  onPressed: (){
+                    handleSignIn();
+                  },
+                  child: Text("Sign in with Google"),
+                  color: Colors.blue,
+                ),
+              ],
+            ),
+          ]
+        ),
       ), 
     );
   }

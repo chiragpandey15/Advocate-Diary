@@ -20,6 +20,8 @@ import 'package:advocate/addDate.dart';
 import 'package:advocate/Message/message.dart';
 import 'package:advocate/Message/perticularMessage.dart';
 import 'package:advocate/Message/sendSMS.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'dart:io';
 import 'package:sqflite/sqflite.dart';
@@ -65,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   
   List<Case>todaysCase=List();
   bool wait=false;
+  String name="",image="";
 
   Future<void>validateFromServer()async{
     try{
@@ -145,7 +148,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       setState(() {
         wait=true;
       });
-      print("Here we are");
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      name=prefs.getString("user_name");
+      image=prefs.getString("user_photoUrl");
+      
+
       DateTime now =DateTime.now();
       String today=now.year.toString()+"-"+now.month.toString()+"-"+now.day.toString();
       print(today);
@@ -198,6 +205,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   Future<void>checkLogin()async{
     try{
+
+      var status=await Permission.sms.isGranted;
+      while(status==false)
+      {
+        var cur=await Permission.sms.request();
+        status=cur.isGranted;
+        if(status==false)
+          Toast.show("We require SMS permission to serve you better.",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
+        
+      }
+
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
       // prefs.clear();
       if(prefs.getString("login")==null)
@@ -293,13 +312,38 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     }
   }
 
+
+  Future<String> getPhoto()async{
+    
+    SharedPreferences prefs = await SharedPreferences.getInstance(); 
+    String res=prefs.getString("user_photoUrl");
+    return res;
+  }
+
+  Future<String> getName()async{
+    SharedPreferences prefs = await SharedPreferences.getInstance(); 
+    String res= prefs.getString("user_name");
+    return res;
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     checkLogin();
     checkReminder();
+    DriveStorage dS=DriveStorage();
+    // dS.backUpToDrive();
   }
+
+  logout()async{
+    GoogleSignIn _googleSignIn=new GoogleSignIn();
+    _googleSignIn.signOut();
+    SharedPreferences prefs = await SharedPreferences.getInstance(); 
+    prefs.remove("login");
+    Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context)=>Login()),(Route<dynamic> route)=>false);
+  }
+  
 
 
   @override
@@ -311,6 +355,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       checkReminder();
+      
     }
   }
 
@@ -431,10 +476,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
             ),
             Column(
             children:<Widget>[
+                SizedBox(height:10),
                 CircleAvatar(
-                    
+                    child: Image.network(image),
                 ),
-                Text("Name"),
+                Text(name),
               ],
             ),
             Card(
@@ -444,8 +490,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 },
                 child:Row(
                     children: <Widget>[
-                      Icon(Icons.book),
-                      Text("Add Case"),
+                      Icon(
+                        Icons.book,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Add Case",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                  ),
               ),
@@ -457,8 +512,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 },
                 child:Row(
                     children: <Widget>[
-                      Icon(Icons.message),
-                      Text("Messages"),
+                      Icon(
+                        Icons.message,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Messages",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                  ),
               ),
@@ -474,8 +538,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 },
                 child:Row(
                     children: <Widget>[
-                      Icon(Icons.bookmark),
-                      Text("Tomorrow's Cases"),
+                      Icon(
+                        Icons.bookmark,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Tomorrow's Cases",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                  ),
               ),
@@ -487,8 +560,17 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 },
                 child:Row(
                     children: <Widget>[
-                      Icon(Icons.calendar_today_rounded),
-                      Text("Search by Date"),
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Search by Date",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                  ),
               ),
@@ -503,19 +585,39 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 },
                 child:Row(
                     children: <Widget>[
-                      Icon(Icons.search_rounded),
-                      Text("Search by Client"),
+                      Icon(
+                        Icons.search_rounded,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Search by Client",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                  ),
               ),
             ),
             Card(
               child: InkWell(
-                onTap:(){},
+                onTap:(){
+                  logout();
+                },
                 child:Row(
                     children: <Widget>[
-                      Icon(Icons.logout),
-                      Text("Logout"),
+                      Icon(
+                        Icons.logout,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Logout",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
                     ],
                  ),
               ),

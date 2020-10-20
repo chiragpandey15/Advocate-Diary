@@ -144,7 +144,7 @@ class Search extends SearchDelegate{
   @override
   Widget buildSuggestions(BuildContext context) {
     
-    // List<Case>suggesstion=cases;
+    List<Case>suggesstion=List();
 
     if(query!="")
     {
@@ -166,26 +166,40 @@ class Search extends SearchDelegate{
               onTap: (){
                 Navigator.pushNamed(context, '/perticularCase',arguments: {'case':suggesstion[index]});
               },
-              child: Column(
-                children:[
+              child:Column(
+                children:<Widget>[
                   Text(
-                    suggesstion[index].caseNumber,
-                  ),
-                  SizedBox(height:10),
-                  Text(
-                    suggesstion[index].clientName,
-                  ),
-                  SizedBox(height:10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        "vs  "+suggesstion[index].opponent,
+                      suggesstion[index].caseNumber.toString(),
+                      style: TextStyle(
+                        fontSize: 18,
                       ),
-                    ],
+                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children:<Widget>[
+                      Text(
+                        suggesstion[index].clientName,
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ]
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children:<Widget>[
+                      suggesstion[index].opponent==""?Text(''):
+                      Text(
+                        "vs "+suggesstion[index].opponent,
+                        style: TextStyle(
+                          color:Colors.grey,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ]
                   ),
                 ]
-              )
+              ),
             )
           );
         }

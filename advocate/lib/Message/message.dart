@@ -21,8 +21,16 @@ class _MessageState extends State<Message> {
             child:Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children:<Widget>[
-                Text("Inform Next Date"),
-                Icon(Icons.arrow_forward_ios)
+                Text(
+                  "Inform Next Date",
+                  style:TextStyle(
+                    fontSize:18,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size:30,
+                )
               ]
             )
           ),
@@ -33,8 +41,16 @@ class _MessageState extends State<Message> {
             child:Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children:<Widget>[
-                Text("Reminder"),
-                Icon(Icons.arrow_forward_ios)
+                Text(
+                  "Reminder",
+                  style:TextStyle(
+                    fontSize:18,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size:30,
+                )
               ]
             )
           ),
@@ -45,8 +61,16 @@ class _MessageState extends State<Message> {
             child:Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children:<Widget>[
-                Text("Call for Metting"),
-                Icon(Icons.arrow_forward_ios)
+                Text(
+                  "Call for Metting",
+                  style:TextStyle(
+                    fontSize:18,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 30,
+                )
               ]
             )
           ),

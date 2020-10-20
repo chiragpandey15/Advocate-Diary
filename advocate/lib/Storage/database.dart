@@ -9,6 +9,7 @@ class DbHelper{
 
   String path;
   Database db;
+  DriveStorage dS=DriveStorage();
   static const CaseTable='CaseTable';
   static const caseId='id';
   static const caseNumber='caseNumber';
@@ -254,62 +255,45 @@ class DbHelper{
 
   Future<void>addCase(Case newCase) async{
     await initDatabse();
-    final sql='''INSERT INTO ${DbHelper.CaseTable}
-    (
-      ${DbHelper.caseNumber},
-      ${DbHelper.clientName},
-      ${DbHelper.clientMobile},
-      ${DbHelper.weAre},
-      ${DbHelper.opponent},
-      ${DbHelper.opponentAdvocate},
-      ${DbHelper.courtName},
-      ${DbHelper.courtNumber},
-      ${DbHelper.caseFee},
-      ${DbHelper.messagePermission},
-      ${DbHelper.description}
-    )  
-    VALUES
-    (
-      "${newCase.caseNumber}",
-      "${newCase.clientName}",
-      "${newCase.clientMobile}",
-      "${newCase.weAre}",
-      "${newCase.opponent}",
-      "${newCase.opponentAdvocate}",
-      "${newCase.courtName}",
-      "${newCase.courtNumber}",
-      "${newCase.caseFee}",
-      "${newCase.messagePermission}",
-      "${newCase.description}"
-    )''';
     
-    final result=await db.rawQuery(sql);
+    await db.insert(
+        "${DbHelper.CaseTable}",
+        {
+          "${DbHelper.caseNumber}":"${newCase.caseNumber}",
+          "${DbHelper.clientName}":"${newCase.clientName}",
+          "${DbHelper.clientMobile}":"${newCase.clientMobile}",
+          "${DbHelper.weAre}":"${newCase.weAre}",
+          "${DbHelper.opponent}":"${newCase.opponent}",
+          "${DbHelper.opponentAdvocate}":"${newCase.opponentAdvocate}",
+          "${DbHelper.courtName}":"${newCase.courtName}",
+          "${DbHelper.courtNumber}":"${newCase.courtNumber}",
+          "${DbHelper.caseFee}":"${newCase.caseFee}",
+          "${DbHelper.messagePermission}":"${newCase.messagePermission}",
+          "${DbHelper.description}":"${newCase.description}",
+        }
+        
+      );
+    dS.backUpToDrive();
   }
 
 
   Future<void>addDetails(Details detail,int id) async{
     await initDatabse();
     
-    final sql='''INSERT INTO ${DbHelper.DetailsTable}
-    (
-      ${DbHelper.caseID},
-      ${DbHelper.date},
-      ${DbHelper.stage},
-      ${DbHelper.extraNote},
-      ${DbHelper.paymentDemand},
-      ${DbHelper.previousDate}
-    )  
-    VALUES
-    (
-      "$id",
-      "${detail.date}",
-      "${detail.stage}",
-      "${detail.extraNote}",
-      "${detail.paymentDemand}",
-      "${detail.previousDate}"
-    )''';
+
+    await db.insert(
+      "${DbHelper.DetailsTable}",
+      {
+        "${DbHelper.caseID}":"$id",
+        "${DbHelper.date}":"${detail.date}",
+        "${DbHelper.stage}":"${detail.stage}",
+        "${DbHelper.extraNote}":"${detail.extraNote}",
+        "${DbHelper.paymentDemand}":"${detail.paymentDemand}",
+        "${DbHelper.previousDate}":"${detail.previousDate}",
+      }
+    );
+    dS.backUpToDrive();
     
-    final result=await db.rawQuery(sql);
   }
 
   Future<void>deleteCase(int id) async{
@@ -323,7 +307,8 @@ class DbHelper{
     sql='''DELETE FROM ${DbHelper.CaseTable} WHERE ${DbHelper.caseId}==$id
     ''';
     final result=await db.rawQuery(sql);
-
+    
+    dS.backUpToDrive();
     
   }
 
@@ -332,58 +317,79 @@ class DbHelper{
     final sql='''DELETE FROM ${DbHelper.DetailsTable} WHERE ${DbHelper.detailsId}==$id
     ''';
     final result=await db.rawQuery(sql);
+    dS.backUpToDrive();
   }
 
   Future<void>updateCase(Case updatedCase,int id)async{
     await initDatabse();
-    final sql='''UPDATE ${DbHelper.CaseTable} SET 
-    ${DbHelper.caseNumber}="${updatedCase.caseNumber}"
-    ,${DbHelper.clientName}="${updatedCase.clientName}"
-    ,${DbHelper.clientMobile}="${updatedCase.clientMobile}"
-    ,${DbHelper.weAre}="${updatedCase.weAre}"
-    ,${DbHelper.opponent}="${updatedCase.opponent}"
-    ,${DbHelper.opponentAdvocate}="${updatedCase.opponentAdvocate}"
-    ,${DbHelper.courtName}="${updatedCase.courtName}"
-    ,${DbHelper.courtNumber}="${updatedCase.courtNumber}"
-    ,${DbHelper.caseFee}="${updatedCase.caseFee}"
-    ,${DbHelper.messagePermission}="${updatedCase.messagePermission}"
-    ,${DbHelper.description}="${updatedCase.description}"
-     WHERE ${DbHelper.caseId}=$id
-    ''';
-    final result=await db.rawQuery(sql);
+    
+
+    await db.update(
+      "${DbHelper.CaseTable}",
+      {
+        "${DbHelper.caseNumber}":"${updatedCase.caseNumber}"
+      ,"${DbHelper.clientName}":"${updatedCase.clientName}"
+      ,"${DbHelper.clientMobile}":"${updatedCase.clientMobile}"
+      ,"${DbHelper.weAre}":"${updatedCase.weAre}"
+      ,"${DbHelper.opponent}":"${updatedCase.opponent}"
+      ,"${DbHelper.opponentAdvocate}":"${updatedCase.opponentAdvocate}"
+      ,"${DbHelper.courtName}":"${updatedCase.courtName}"
+      ,"${DbHelper.courtNumber}":"${updatedCase.courtNumber}"
+      ,"${DbHelper.caseFee}":"${updatedCase.caseFee}"
+      ,"${DbHelper.messagePermission}":"${updatedCase.messagePermission}"
+      ,"${DbHelper.description}":"${updatedCase.description}"
+      },
+      where: "${DbHelper.caseId}=?",
+      whereArgs: ["$id"],
+    );
+
+    dS.backUpToDrive();
+
   }
 
   Future<void>updateDetails(Details detail,int id,int _caseID)async{
     await initDatabse();
-    final sql='''UPDATE ${DbHelper.DetailsTable} SET 
-    ${DbHelper.date}="${detail.date}"
-    ,${DbHelper.previousDate}="${detail.previousDate}"
-    ,${DbHelper.stage}="${detail.stage}"
-    ,${DbHelper.extraNote}="${detail.extraNote}"
-    ,${DbHelper.paymentDemand}="${detail.paymentDemand}"
     
-     WHERE ${DbHelper.detailsId}=$id AND ${DbHelper.caseID}=$_caseID
-    ''';
-    final result=await db.rawQuery(sql);
-    
+
+    await db.update(
+      "${DbHelper.DetailsTable}",
+      {
+        "${DbHelper.date}":"${detail.date}"
+      ,"${DbHelper.previousDate}":"${detail.previousDate}"
+      ,"${DbHelper.stage}":"${detail.stage}"
+      ,"${DbHelper.extraNote}":"${detail.extraNote}"
+      ,"${DbHelper.paymentDemand}":"${detail.paymentDemand}"
+      },
+      where: "${DbHelper.detailsId}=?",
+      whereArgs: ["$id"],
+    );
+
+    dS.backUpToDrive();
   }
 
   Future<Map>getMessage(int id) async
   {
     await initDatabse();
     String sql="SELECT * from $MessageTable where $messageId=$id";
-    print(sql);
+    
     final result=await db.rawQuery(sql);
     return result[0];
   }
 
-  Future<Map>updateMessage(int id,String text,int allowed) async
+  Future<void>updateMessage(int id,String text,int allowed) async
   {
     await initDatabse();
-    String sql="UPDATE $MessageTable set $message='$text', $permission=$allowed where $messageId=$id";
-    print(sql);
-    final result=await db.rawQuery(sql);
-    return result[0];
+    
+    await db.update(
+      "${DbHelper.MessageTable}",
+      {
+        "$message":"$text",
+        "$permission":"$allowed"
+      },
+      where: "$messageId = $id",
+      // whereArgs: ["$id"],
+    );
+    dS.backUpToDrive();
   }
 
   List<Details>sortByDate(List<Details>details)

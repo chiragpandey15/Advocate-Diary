@@ -34,29 +34,39 @@ class _PagesState extends State<Pages> {
         children: <Widget>[
           Card(
             child:Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  thisCase.caseNumber.toString()
-                ),
-                Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Text(thisCase.clientName),
-                      ],
+                children:<Widget>[
+                  Text(
+                      thisCase.caseNumber.toString(),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text("vs "+thisCase.opponent),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children:<Widget>[
+                      Text(
+                        thisCase.clientName,
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                    ]
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children:<Widget>[
+                      thisCase.opponent==""?Text(''):
+                      Text(
+                        "vs "+thisCase.opponent,
+                        style: TextStyle(
+                          color:Colors.grey,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ]
+                  ),
+                ]
+              ),
           ),
           SizedBox(height:20),
           Card(

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:advocate/Case/case.dart';
 import 'package:advocate/Storage/database.dart';
 import 'package:toast/toast.dart';
+import 'package:advocate/Message/sendSMS.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PerticaularCase extends StatefulWidget {
   @override
@@ -82,7 +84,13 @@ class _PerticaularCaseState extends State<PerticaularCase> {
   }
   
   void addDate(){
-   Navigator.pushNamed(context, '/addDetails',arguments: {'caseId':thisCase.id}).then((value){
+   Navigator.pushNamed(context, '/addDetails',arguments: 
+   {
+    'caseId':thisCase.id,
+    'clientMobile':thisCase.clientMobile,
+    'clientName':thisCase.clientName,
+    'messagePermission':thisCase.messagePermission,
+  }).then((value){
       getDetails();
     }); 
   }
@@ -110,6 +118,178 @@ class _PerticaularCaseState extends State<PerticaularCase> {
     DateTime temp=DateTime.parse(date);
     String res=temp.day.toString()+"-"+temp.month.toString()+"-"+temp.year.toString();
     return res;
+  }
+
+
+  Future<String>selectDate()async{
+    var date=await showDatePicker(
+        context:context,
+        initialDate:DateTime.now(),
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2032),
+        helpText: "Date for meeting",
+        fieldHintText: "Date for meeting",      
+      );
+  
+
+    String res="";
+    if(date!=null)
+      res=date.day.toString()+"-"+date.month.toString()+"-"+date.year.toString();
+    return res;
+  }
+
+  Future<String>getTime()async{
+    var time=await showTimePicker(
+      context:context,
+      initialTime: TimeOfDay(
+        hour:12,
+        minute:0,
+      ),
+      helpText: "Time of meeting", 
+    );
+
+    String res="";
+    if(time!=null)
+      res=time.hour.toString()+":"+time.minute.toString();
+
+    return res;
+
+  }
+
+  Future<String>askPayment()async{
+    String amount="";
+    try{
+      await showDialog(
+        context: context,
+        builder: (context){
+          return AlertDialog(
+            title:Text("Enter Payment Amount"),
+            content: TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Payment Amount",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                    maxLines: 3,
+                    onChanged: (s){
+                        amount=s;
+                    },
+                ),
+            actions: [
+              FlatButton(
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+                child: Text("Done"),
+              )
+            ],
+          );
+        }
+      );
+      print("AMOUNT");
+      print(amount);
+      
+    }catch(e){
+      print(e);
+    }
+    return amount;
+  }
+
+  Future<String> getMessage(String msg) async{
+      String exp="";
+      
+      for(int i=0;i<msg.length;i++)
+      {
+        if(i<msg.length-1 && msg[i]=="#" && (msg[i+1]=='1' || msg[i+1]=='2' || msg[i+1]=='3' || msg[i+1]=='4'))
+        {
+          String temp="";
+          if(msg[i+1]=='1')
+          {
+            temp=await selectDate();
+            exp+=temp;
+          }
+          else if(msg[i+1]=='3')
+          {
+            String paymentDemand=await askPayment();
+            exp+=paymentDemand;
+          }
+          else if(msg[i+1]=='4')
+            exp+=thisCase.clientName;
+          else if(msg[i+1]=='2') 
+          {
+          String time=await getTime();
+          exp+=time; 
+          }
+
+          i++;
+        }
+        else
+          exp=exp+msg[i];
+      }
+      return exp;
+    }
+  
+  void showError(String message)
+  {
+    showDialog(
+      context:context,
+      builder:(context){
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(message),
+          actions: [
+            FlatButton(
+              onPressed: (){
+                Navigator.of(context).pop();
+              },
+              child: Text("Ok"),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  Future<void>callForMeeting()async{
+    try{
+      DbHelper dB=DbHelper();
+      Map msg=await dB.getMessage(3);
+      String messageText=msg['textMessage'];
+      int allowed=msg['allowed'];
+      if(allowed==1)
+      {
+        String message=await getMessage(messageText);
+        SendSMS sms=SendSMS();
+        
+        var status=await Permission.sms.isGranted;
+        if(thisCase.messagePermission==true && status==true)
+        {
+          sms.send(message,thisCase.clientMobile);
+        }
+        else if(thisCase.messagePermission==false)
+        {
+          showError("Message permission is disabled");
+        }
+        else if(status==false)
+        {
+          showError("SMS permission is not granted");
+        }
+        else
+        {
+          showError("Some error occured");
+        }
+      }
+      else
+      {
+        showError("Message permissionis disabled");
+      }
+
+
+    }catch(e){
+      print(e);
+    }
   }
 
   @override
@@ -244,9 +424,21 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                   ],
                 ),
                 SizedBox(height:10),
-                OutlineButton(
-                  onPressed: (){},
-                  child: Text("Call for meeting"),
+                Row(
+                  mainAxisAlignment:MainAxisAlignment.spaceAround,
+                  children: [
+                    OutlineButton(
+                      onPressed: (){
+                        callForMeeting();
+                      },
+                      child: Text("Call for meeting"),
+                    ),
+                    MaterialButton(
+                      onPressed: (){},
+                      child: Text("Account"),
+                      color: Colors.blue,
+                    ),
+                  ],
                 ),
               ],
             ),

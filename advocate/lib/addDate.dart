@@ -1,6 +1,8 @@
 import 'package:advocate/Case/case.dart';
 import 'package:flutter/material.dart';
 import 'package:advocate/Storage/database.dart';
+import 'package:advocate/Message/sendSMS.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:toast/toast.dart';
 
 class AddDate extends StatefulWidget {
@@ -10,9 +12,9 @@ class AddDate extends StatefulWidget {
 
 class _AddDateState extends State<AddDate> {
 
-  bool wait=false,visited=false;
+  bool wait=false,visited=false,messagePermission=false;
   String date="Date",previousDate="Previous Date",stage="",extraNote="",paymentDemand="";
-  String dateStored="",previousDateStored="";
+  String dateStored="",previousDateStored="",clientMobile="",clientName="";
   int caseId=0;
 
 
@@ -49,6 +51,73 @@ class _AddDateState extends State<AddDate> {
       });
   }
 
+  Future<String>getTime()async{
+    String time="";
+
+    var picked=await showTimePicker(
+        context: context,
+        helpText: "Select TIme for text message",
+        initialTime: TimeOfDay(
+          hour: 12,
+          minute: 0,
+        ),
+    );
+    time=picked.hour.toString()+":"+picked.minute.toString();
+    
+    return time;
+  }
+
+  Future<String> getMessage(String msg) async{
+    String exp="";
+    
+    for(int i=0;i<msg.length;i++)
+    {
+      if(i<msg.length-1 && msg[i]=="#" && (msg[i+1]=='1' || msg[i+1]=='2' || msg[i+1]=='3' || msg[i+1]=='4'))
+      {
+        if(msg[i+1]=='1')
+          exp+=date;
+        else if(msg[i+1]=='3')
+          exp+=paymentDemand;
+        else if(msg[i+1]=='4')
+          exp+=clientName;
+        else if(msg[i+1]=='2') 
+        {
+         String time=await getTime();
+         exp+=time; 
+        }
+
+        i++;
+      }
+      else
+        exp=exp+msg[i];
+    }
+    return exp;
+  }
+
+  Future<void>sendMessage(DbHelper dB)async{
+    try{
+      Map msg=await dB.getMessage(1);
+      String messageText=msg['textMessage'];
+      int allowed=msg['allowed'];
+      if(allowed==1)
+      {
+        String message=await getMessage(messageText);
+        SendSMS sms=SendSMS();
+        
+        var status=await Permission.sms.isGranted;
+        if(messagePermission==true && status==true)
+        {
+          sms.send(message,clientMobile);
+        }
+      }
+
+
+
+    }catch(e){
+      print(e);
+    }
+  }
+
 
   Future<void>add()async{
     try{
@@ -63,6 +132,7 @@ class _AddDateState extends State<AddDate> {
               caseId
             );
       // Toast
+      await sendMessage(dB);
       Toast.show("Date successfully added",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
       // Navigate Back
       Navigator.of(context).pop();
@@ -84,6 +154,9 @@ class _AddDateState extends State<AddDate> {
     {
       Map map=ModalRoute.of(context).settings.arguments;
       caseId=map['caseId'];
+      clientMobile=map['clientMobile'];
+      clientName=map['clientName'];
+      messagePermission=map['messagePermission'];
       visited=true;
     }
     return Scaffold(

@@ -29,7 +29,7 @@ dependencies:
   toast:
   sqflite:
   path_provider:
-
+  permission_handler:
   googleapis:
   googleapis_auth:
   # The following adds the Cupertino Icons font to your application.
