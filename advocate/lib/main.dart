@@ -20,6 +20,7 @@ import 'package:advocate/addDate.dart';
 import 'package:advocate/Message/message.dart';
 import 'package:advocate/Message/perticularMessage.dart';
 import 'package:advocate/Message/sendSMS.dart';
+import 'package:advocate/handbook.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
         '/addDetails':(context)=>AddDate(),
         '/message':(context)=>Message(),
         '/perticularMessage':(context)=>PerticularMessage(),
+        '/handbook':(context)=>Handbook(),
       },
     );
   }
@@ -333,7 +335,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     checkLogin();
     checkReminder();
     DriveStorage dS=DriveStorage();
-    // dS.backUpToDrive();
+    dS.backUpToDrive();
   }
 
   logout()async{
@@ -600,6 +602,33 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                  ),
               ),
             ),
+
+            Card(
+              child: InkWell(
+                onTap:(){
+                  Navigator.pushNamed(context, '/handbook',).then((value){
+                    getTodaysList();
+                  });
+                },
+                child:Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.note,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Handbook",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                 ),
+              ),
+            ),
+
+
             Card(
               child: InkWell(
                 onTap:(){
