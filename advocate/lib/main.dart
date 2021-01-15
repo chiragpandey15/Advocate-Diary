@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:advocate/Login/pay.dart';
+import 'package:advocate/Login/refresh.dart';
 import 'package:advocate/caseByDate.dart';
 import 'package:advocate/editCase.dart';
 import 'package:advocate/editDate.dart';
@@ -23,9 +23,11 @@ import 'package:advocate/Message/sendSMS.dart';
 import 'package:advocate/handbook.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:advocate/account.dart';
+import 'package:advocate/Login/refreshOrTry.dart';
+import 'package:advocate/guidelines.dart';
+import 'package:advocate/contact.dart';
 
-import 'dart:io';
-import 'package:sqflite/sqflite.dart';
 void main() {
   runApp(MyApp());
 }
@@ -42,7 +44,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
       routes: {
-        '/pay':(context)=>Pay(),
+        '/refresh':(context)=>Refresh(),
         '/addCase':(context)=>AddCase(),
         '/perticularCase':(context)=>PerticaularCase(),
         '/searchByClient':(context)=>SearchByClient(),
@@ -54,6 +56,10 @@ class MyApp extends StatelessWidget {
         '/message':(context)=>Message(),
         '/perticularMessage':(context)=>PerticularMessage(),
         '/handbook':(context)=>Handbook(),
+        '/account':(context)=>Account(),
+        '/refreshOrTry':(context)=>RefreshOrTry(),
+        '/guidelines':(context)=>Guidelines(),
+        '/contact':(context)=>Contact()
       },
     );
   }
@@ -68,59 +74,59 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   
   List<Case>todaysCase=List();
-  bool wait=false;
-  String name="",image="";
+  bool wait=false,update=false;
+  String name="",image="",updateURL="";
+
+
+  checkUpdate(String url,String updateDate)async
+  {
+    updateURL=url;
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString("updateURL", url);
+    String lastUpdate=prefs.getString("updateDate");
+    DateTime a=DateTime.parse(updateDate);
+    DateTime b=DateTime.parse(lastUpdate);
+    int day=a.difference(b).inDays;
+    
+    print("Day==="+day.toString());
+    print(a);
+    print(b);
+
+    if(day>0)
+    {
+      setState((){
+        update=true;
+      });
+    }
+  }
 
   Future<void>validateFromServer()async{
     try{
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String auth=prefs.getString("login");
-      print("Valid From server");
-      print("auth");
-      final url="http://192.168.43.235/Advocate/validateFromServer.php?auth="+auth;
-      print(url);
+      
+      final url="http://www.bluepapaya.in/AdvocateManager/validateFromServer.php?auth="+auth;
+      
       final response =await http.get(url);
-      print("Valid Response");
-      print(response.body);
       if(response.statusCode==200)
       {
         Map res=jsonDecode(response.body);
+        print("From Server");
+        print(res);
         if(res['ok']=='1')
         {
           prefs.setString("expDate", res['expDate']);
           prefs.setString("allowed", res['allowed']);
+          prefs.setString("ipc", res['ipc']);
+          prefs.setString("crpc", res['crpc']);
+          prefs.setString("iea", res['iea']);
+          prefs.setString("cpc", res['cpc']);
+          prefs.setString("coi", res['coi']);
+
           if(res['allowed']=='0')
           {
-            showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text("Note"),
-                    content: Text("Ask seller to give confirmation."),
-                    actions: [
-                      FlatButton(
-                        onPressed: (){
-                          Navigator.of(context).pop();
-                        }, 
-                        child: Text("Ok"),
-                      )
-                    ],
-                  );  
-                },
-              );
-          }
-        }
-      }
-
-    }catch(e){
-      print(e);
-    }
-  }
-
-
-  void pay(){
-    Navigator.pushNamed(context, '/pay').then((value){
+            Navigator.pushNamed(context, '/refresh').then((value){
             if(value==1)
             {
               showDialog(
@@ -128,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                 builder: (context) {
                   return AlertDialog(
                     title: Text("Note"),
-                    content: Text("Ask seller to give confirmation."),
+                    content: Text("Ask Coordinator to give confirmation."),
                     actions: [
                       FlatButton(
                         onPressed: (){
@@ -142,6 +148,98 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
               );
             }
 
+            else
+            {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text("Note"),
+                    content: Text("Contact Coordinator for any query."),
+                    actions: [
+                      FlatButton(
+                        onPressed: (){
+                          Navigator.of(context).pop();
+                        }, 
+                        child: Text("Ok"),
+                      )
+                    ],
+                  );  
+                },
+              );
+            }
+          });
+            // showDialog(
+            //     context: context,
+            //     builder: (context) {
+            //       return AlertDialog(
+            //         title: Text("Note"),
+            //         content: Text("Ask Coordinator to give confirmation."),
+            //         actions: [
+            //           FlatButton(
+            //             onPressed: (){
+            //               Navigator.of(context).pop();
+            //             }, 
+            //             child: Text("Ok"),
+            //           )
+            //         ],
+            //       );  
+            //     },
+            //   );
+          }
+          checkUpdate(res['updateURL'],res['updateDate']);
+        }
+      }
+
+    }catch(e){
+      print(e);
+    }
+  }
+
+
+  void refresh(){
+    Navigator.pushNamed(context, '/refresh').then((value){
+            if(value==1)
+            {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text("Note"),
+                    content: Text("Ask Coordinator to give confirmation."),
+                    actions: [
+                      FlatButton(
+                        onPressed: (){
+                          Navigator.of(context).pop();
+                        }, 
+                        child: Text("Ok"),
+                      )
+                    ],
+                  );  
+                },
+              );
+            }
+
+            else
+            {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text("Note"),
+                    content: Text("Contact Coordinator for any query."),
+                    actions: [
+                      FlatButton(
+                        onPressed: (){
+                          Navigator.of(context).pop();
+                        }, 
+                        child: Text("Ok"),
+                      )
+                    ],
+                  );  
+                },
+              );
+            }
           });
   }
 
@@ -157,10 +255,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
       DateTime now =DateTime.now();
       String today=now.year.toString()+"-"+now.month.toString()+"-"+now.day.toString();
-      print(today);
       DbHelper dB=DbHelper();
       todaysCase=await dB.getCaseByDate(today);
-      print(todaysCase);
     }catch(e){
       print(e);
     }finally{
@@ -170,7 +266,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     }
   }
 
-  Future<void>checkPayment()async{
+  Future<void>checkRefreshment()async{
     try{
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -178,10 +274,9 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       if(_lastDate!=null && _lastDate!='')
       {
         DateTime now =DateTime.now();
-        print("lastDate="+_lastDate);
         DateTime lastDate=DateTime.parse(_lastDate);
         
-        int difference=lastDate.difference(now).inDays;
+        int difference=lastDate.difference(now).inDays+1;
 
         if(difference<30 && difference>0)
         {
@@ -189,16 +284,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         }
         else if(difference<0)
         {
-          pay();
-        } 
-        validateFromServer();
+          refresh();
+        }
+        if(prefs.getString("expDate")!=null) 
+          validateFromServer();
+        
         getTodaysList();
         // Fetch Data
 
       }
       else
       {
-        pay();
+        refresh();
       }
     }catch(e){
       print(e);
@@ -207,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
 
   Future<void>checkLogin()async{
     try{
-
+      SharedPreferences prefs = await SharedPreferences.getInstance();
       var status=await Permission.sms.isGranted;
       while(status==false)
       {
@@ -215,11 +312,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         status=cur.isGranted;
         if(status==false)
           Toast.show("We require SMS permission to serve you better.",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
-        
+        else if(prefs.getString("login")==null)
+        {
+          Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context)=>Login()),(Route<dynamic> route)=>false);
+        }
       }
 
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
+      
+      
       // prefs.clear();
       if(prefs.getString("login")==null)
       {
@@ -228,7 +329,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
       }
       else
       {
-        checkPayment();
+        checkReminder();
+        checkRefreshment();
       }
 
     }catch(e){
@@ -248,7 +350,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     {
       if(i<msg.length-1 && msg[i]=="#" && (msg[i+1]=='1' || msg[i+1]=='2' || msg[i+1]=='3' || msg[i+1]=='4'))
       {
-        exp+=date;
+        if(msg[i+1]=='1')
+          exp+=date;
+        // else if(msg[i+1]=='3')
+        //   exp+=paymentDemand;
+        // else if(msg[i+1]=='4')
+        //   exp+=clientName;
+        // else if(msg[i+1]=='2') 
+        // {
+        //  String time=await getTime();
+        //  exp+=time; 
+        // }
+
         i++;
       }
       else
@@ -257,8 +370,28 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     return exp;
   }
 
-  Future<void>sendReminder()async{
+  Future<bool>sendReminder()async{
     try{
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String expDate=prefs.getString("expDate");
+      if(expDate==null)
+      {
+        return false;      
+      }
+      else
+      {
+        DateTime lastDate=DateTime.parse(expDate);
+        DateTime now=DateTime.now();
+
+        int difference=lastDate.difference(now).inDays;
+        if(difference<-1)
+        {
+          return false;
+        }
+      }
+      
+
       DbHelper dB=DbHelper();
       Map msg=await dB.getMessage(2);
       String messageText=msg['textMessage'];
@@ -280,30 +413,68 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
             sms.send(message,tomorrowCase[i].clientMobile);
           }
         }
+        return true;
       }
 
 
     }catch(e){
       print(e);
     }
+    return false;
   }
 
   Future<void>checkReminder()async{
     try{
 
       DateTime now=DateTime.now();
-      print(now.hour);
       if(now.hour>17)
       {
         SharedPreferences prefs = await SharedPreferences.getInstance(); 
         String reminderLastDate=prefs.getString("reminderLastDate");
-        String nowString=now.day.toString()+"-"+now.month.toString()+"-"+now.year.toString();
-        
-        if(nowString==reminderLastDate)
-          return;
 
-        sendReminder();
-        await prefs.setString("reminderLastDate",nowString);  
+        String day=now.day.toString();
+
+        if(now.day<10)
+          day="0"+day;
+
+        String month=now.month.toString();
+
+        if(now.month<10)
+          month="0"+month;
+
+        String year=now.year.toString();
+
+        String nowString=year+"-"+month+"-"+day;
+        
+
+        if(nowString!=reminderLastDate)
+        {
+          bool res=await sendReminder();
+          if(res==true)
+          {
+            // await prefs.setString("reminderLastDate",nowString);  
+          }
+        }
+
+        now=now.add(Duration(days:1));
+        
+        day=now.day.toString();
+
+        if(now.day<10)
+          day="0"+day;
+
+        month=now.month.toString();
+
+        if(now.month<10)
+          month="0"+month;
+
+        year=now.year.toString();
+
+        nowString=year+"-"+month+"-"+day;
+
+        Navigator.pushNamed(context, '/searchByDate',arguments: {'date':nowString}).then((value){
+                    getTodaysList();
+                  });
       }
 
       
@@ -333,7 +504,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     checkLogin();
-    checkReminder();
+    
     DriveStorage dS=DriveStorage();
     dS.backUpToDrive();
   }
@@ -356,7 +527,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      checkReminder();
+      checkLogin();
       
     }
   }
@@ -376,41 +547,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
               size: 35,
             ),
             onPressed: ()async{
-              // DriveStorage dS=DriveStorage();
-              // await dS.updateToDrive();
-              // print("Update Ho gaya dude");
 
               selectPreviousDate(context);
             }
           ),
           SizedBox(width:20),
-          IconButton(
-            icon: Icon(Icons.login), 
-            onPressed: (){
-              DbHelper dB=DbHelper();
-              dB.log();
-            }
-          ),
-          SizedBox(width:20),
-          IconButton(
-            icon: Icon(Icons.outbond), 
-            onPressed: ()async{
-              String path=await getDatabasesPath();
-              File f=File(path+"/advocate.db");
-              List<int>read=await f.readAsBytes();
-              print(read);
-              
-              DriveStorage dS=DriveStorage();
-              await dS.downloadGoogleDriveFile();
-              print("Downloaded wala upper hai aur read wala niche");
-              
-              
-              // File temp=File(p);
-              // String read=await temp.readAsString();
-              // print("File read");
-              // print(read);
-            }
-          ),
+          
         ],
       ),
       body: wait==true?Center(
@@ -593,7 +735,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                       ),
                       SizedBox(width: 10,),
                       Text(
-                        "Search by Client",
+                        "Search",
                         style: TextStyle(
                           fontSize: 20,
                         ),
@@ -619,6 +761,76 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
                       SizedBox(width: 10,),
                       Text(
                         "Handbook",
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                 ),
+              ),
+            ),
+
+            Card(
+              child: InkWell(
+                onTap:(){
+                  refresh();
+                },
+                child:Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.cached,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Refresh Account", //ready to use
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                 ),
+              ),
+            ),
+
+            Card(
+              child: InkWell(
+                onTap:(){
+                  Navigator.pushNamed(context, '/guidelines',arguments: {'update':update,'url':updateURL});
+                },
+                child:Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.ac_unit,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Guidelines and update",
+                        style: TextStyle(
+                          fontSize: 20,
+                          color:update?Colors.red:Colors.black,
+                        ),
+                      ),
+                    ],
+                 ),
+              ),
+            ),
+
+            Card(
+              child: InkWell(
+                onTap:(){
+                  Navigator.pushNamed(context, '/contact',);
+                },
+                child:Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.feedback,
+                        size: 35,
+                      ),
+                      SizedBox(width: 10,),
+                      Text(
+                        "Feedback",
                         style: TextStyle(
                           fontSize: 20,
                         ),
@@ -689,7 +901,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver{
         lastDate: DateTime(2032));
     if (picked != null)
     {
-      requireDate=picked.year.toString()+"-"+picked.month.toString()+"-"+picked.day.toString();
+      String day=picked.day.toString();
+      
+      if(picked.day<10)
+        day="0"+day;
+      requireDate=picked.year.toString()+"-"+picked.month.toString()+"-"+day;
       Navigator.pushNamed(context, '/searchByDate',arguments: {'date':requireDate}).then((value){
         getTodaysList();
       });      

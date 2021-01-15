@@ -4,6 +4,7 @@ import 'package:advocate/Storage/database.dart';
 import 'package:toast/toast.dart';
 import 'package:advocate/Message/sendSMS.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PerticaularCase extends StatefulWidget {
   @override
@@ -62,7 +63,9 @@ class _PerticaularCaseState extends State<PerticaularCase> {
       });
       
       await dB.deleteDetails(id);
-      getDetails();
+       await dB.getDetails(thisCase.id).then((value){
+        thisCase.details=value;
+      });
 
     }catch(e){
 
@@ -103,6 +106,7 @@ class _PerticaularCaseState extends State<PerticaularCase> {
       });
       DbHelper dB=DbHelper();
       await dB.updateCase(thisCase, thisCase.id);
+      
 
     }catch(e){
       print(e);
@@ -150,7 +154,22 @@ class _PerticaularCaseState extends State<PerticaularCase> {
 
     String res="";
     if(time!=null)
-      res=time.hour.toString()+":"+time.minute.toString();
+    {
+      String minute=time.minute.toString();
+      if(time.minute<10)
+        minute="0"+minute;
+      String hr=time.hour.toString();
+
+      if(time.hour>12)
+      {
+        hr=(time.hour-12).toString();
+        minute=minute+" PM";
+      }
+      else
+        minute=minute+" AM";
+
+      res=hr+":"+minute;
+    }
 
     return res;
 
@@ -188,8 +207,6 @@ class _PerticaularCaseState extends State<PerticaularCase> {
           );
         }
       );
-      print("AMOUNT");
-      print(amount);
       
     }catch(e){
       print(e);
@@ -208,19 +225,25 @@ class _PerticaularCaseState extends State<PerticaularCase> {
           if(msg[i+1]=='1')
           {
             temp=await selectDate();
+            if(temp=="")
+              return "";
             exp+=temp;
           }
           else if(msg[i+1]=='3')
           {
             String paymentDemand=await askPayment();
-            exp+=paymentDemand;
+            if(paymentDemand=="")
+              return "";
+            exp=exp+"₹ "+paymentDemand;
           }
           else if(msg[i+1]=='4')
             exp+=thisCase.clientName;
           else if(msg[i+1]=='2') 
           {
-          String time=await getTime();
-          exp+=time; 
+            String time=await getTime();
+            if(time=="")
+              return "";
+            exp+=time; 
           }
 
           i++;
@@ -252,21 +275,82 @@ class _PerticaularCaseState extends State<PerticaularCase> {
     );
   }
 
-  Future<void>callForMeeting()async{
+  Future<void>callForMeeting(int index)async{
     try{
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String expDate=prefs.getString("expDate");
+      if(expDate==null)
+      {
+        Toast.show("Message cannot be saved. Please consult coordinator",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER); 
+        return;      
+      }
+      else
+      {
+        DateTime lastDate=DateTime.parse(expDate);
+        DateTime now=DateTime.now();
+
+        int difference=lastDate.difference(now).inDays;
+        if(difference<-1)
+        {
+          Toast.show("Message cannot be saved. Please consult coordinator",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);       
+          return;
+        }
+      }
       DbHelper dB=DbHelper();
-      Map msg=await dB.getMessage(3);
+      Map msg=await dB.getMessage(index);
       String messageText=msg['textMessage'];
       int allowed=msg['allowed'];
-      if(allowed==1)
+      if(allowed==1 && thisCase.messagePermission==true)
       {
         String message=await getMessage(messageText);
+        if(message=="")
+          return;
         SendSMS sms=SendSMS();
         
         var status=await Permission.sms.isGranted;
         if(thisCase.messagePermission==true && status==true)
         {
+          // showDialog(
+          //   context:context,
+          //   builder: (context){
+          //     return AlertDialog(
+          //       title:Text("Message to be sent"),
+          //       content:TextFormField(
+          //           initialValue: message,
+          //           decoration: InputDecoration(
+          //             hintText: "Message to be sent",
+          //             hintStyle: TextStyle(
+          //               fontWeight: FontWeight.bold,
+          //             ),
+          //             border: OutlineInputBorder(
+          //               borderRadius: BorderRadius.circular(10),
+          //             ),
+          //           ),
+          //           maxLines: 3,
+          //           onChanged: (s){
+          //               message=s;
+          //           },
+          //       ),
+          //       actions: [
+          //         FlatButton(
+          //           onPressed:(){
+          //             Navigator.of(context).pop();
+          //           },
+          //           child: Text("Cancel"),
+          //         ),
+          //         FlatButton(
+          //           onPressed:(){
+          //             sms.send(message,thisCase.clientMobile);
+          //             Navigator.of(context).pop();
+          //           },
+          //           child: Text("Send"),
+          //         ),
+          //       ],
+          //     );
+          //   }
+          // );
           sms.send(message,thisCase.clientMobile);
+          Toast.show("SMS sent.",context, duration: Toast.LENGTH_LONG,gravity:  Toast.CENTER);     
         }
         else if(thisCase.messagePermission==false)
         {
@@ -291,6 +375,57 @@ class _PerticaularCaseState extends State<PerticaularCase> {
       print(e);
     }
   }
+
+  Future<void>disposeCase(int caseNo,String disposedMessage)async{
+    try{
+      DbHelper dB=DbHelper();
+      await dB.disposeCase(caseNo,disposedMessage);
+    }catch(e){
+      print(e);
+    } 
+  }
+
+
+  void askDisposeCase(int caseNo){
+    String disposedMessage="";
+    showDialog(
+      context:context,
+      builder: (context){
+        return AlertDialog(
+          title: Text("Dispose Case"),
+          content: TextFormField(
+                    decoration: InputDecoration(
+                      hintText: "Judgement/Description",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    maxLines: 10,
+                    onChanged: (s){
+                        disposedMessage=s;
+                    },
+                ),
+          actions: [
+            FlatButton(
+              onPressed:(){
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            FlatButton(
+              onPressed:(){
+                disposeCase(caseNo,disposedMessage);
+                Navigator.of(context).pop();
+              },
+              child: Text("Dispose"),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+  
 
   @override
   void initState() {
@@ -365,7 +500,7 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                       value: thisCase.messagePermission,
                       onChanged: (bool value){
                         setState(() {
-                          thisCase.messagePermission=value;
+                          thisCase.messagePermission=!thisCase.messagePermission;
                           // update Case;
                           chenageMessagePermission();
                         });
@@ -429,16 +564,37 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                   children: [
                     OutlineButton(
                       onPressed: (){
-                        callForMeeting();
+                        callForMeeting(3);
                       },
                       child: Text("Call for meeting"),
                     ),
+                    OutlineButton(
+                      onPressed: (){
+                        callForMeeting(4);
+                      },
+                      child: Text("Ask for payment"),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children:[
                     MaterialButton(
-                      onPressed: (){},
+                      onPressed: (){
+                        Navigator.pushNamed(context, "/account",arguments:{'caseID':thisCase.id,'caseFee':thisCase.caseFee});
+                      },
                       child: Text("Account"),
                       color: Colors.blue,
                     ),
-                  ],
+                    MaterialButton(
+                      onPressed: (){
+                        askDisposeCase(thisCase.id);
+                        // Navigator.pushNamed(context, "/account",arguments:{'caseID':thisCase.id,'caseFee':thisCase.caseFee});
+                      },
+                      child: Text("Dispose"),
+                      color: Colors.purple[200],
+                    ),
+                  ]
                 ),
               ],
             ),
@@ -494,6 +650,7 @@ class _PerticaularCaseState extends State<PerticaularCase> {
                                       FlatButton(
                                         onPressed: (){
                                           Navigator.of(context).pop();
+                                          deleteDetails(thisCase.details[index].id);
                                           // Delete Details
 
                                         },

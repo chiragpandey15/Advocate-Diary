@@ -13,8 +13,8 @@ import 'httpClient.dart';
 class DriveStorage{
   
   GoogleSignIn _googleSignIn=new GoogleSignIn(
-    scopes:[ga.DriveApi.DriveFileScope],
-    clientId: "759019737434-qlvr0f8p0v95o8jps24b99mk2orb8ef0.apps.googleusercontent.com",
+    scopes:[ga.DriveApi.DriveAppdataScope],
+    clientId: "89441098307-u2id5vv1mf2si64er3c4h3clvtcn56af.apps.googleusercontent.com",
   );
   
   // uploadFile(String path)async{
@@ -154,7 +154,6 @@ class DriveStorage{
     try{
       ga.File fileToUpload=ga.File();
       fileToUpload.parents = ["appDataFolder"];
-      print("IN CREATE BACK UP ?????????????????????");      
       String path=await getDatabasesPath();
       
       File file=File(path+"/advocate.db");
@@ -183,7 +182,7 @@ class DriveStorage{
 
     }catch(e){
       _googleSignIn.requestScopes(
-        [ga.DriveApi.DriveFileScope]
+        [ga.DriveApi.DriveAppdataScope]
       );
     }
   }
@@ -249,7 +248,6 @@ class DriveStorage{
     {
       googleSignInAccount=await _googleSignIn.signInSilently();
     }
-    print("Download called");
     await _googleSignIn.signIn();
     final header=await googleSignInAccount.authHeaders;
     var client= GoogleHttpClient(header); 
@@ -279,25 +277,20 @@ class DriveStorage{
           List<int> dataStore = [];  
 
           file.stream.listen((data) {  
-              // print("DataReceived: ${data.length}");  
-              // print(data);
+              
                 dataStore.insertAll(dataStore.length, data);  
             }, onDone: () async{  
-                print("Task Done");  
                 saveFile.writeAsBytes(dataStore,flush:true);  
-                print("Abb read karte hue");
+                
                 List<int> z=await saveFile.readAsBytes();
-                print(z);
-                print("File saved at ${saveFile.path}");  
+                
           }, onError: (error) {  
-                print("Some Error");  
                 print(error);
           });  
 
         }
 
       }catch(e){
-        print("Problem hai baka");
         print(e);
       }
 

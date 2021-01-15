@@ -23,7 +23,7 @@ class DbHelper{
   static const caseFee='caseFee';
   static const messagePermission='messsagePermission';
   static const description="description";
-  
+  static const dispose="Dispose";
   
   //*********************************************************** */
   
@@ -43,6 +43,12 @@ class DbHelper{
   static const messageId="ID";
   static const message="textMessage";
   static const permission="allowed";
+
+  //************************************************************************* */
+  static const AccountTable="AccountTable";
+  static const accountId='ID';
+  
+  static const text="TextMessage";
 
 
   Future<void>createTable(Database db) async{
@@ -65,7 +71,6 @@ class DbHelper{
     try{
       await db.execute(sql);
     }catch(e){
-      print("CREATE TABLE 1");
       print(e);
     }
 
@@ -86,7 +91,6 @@ class DbHelper{
     try{
       await db.execute(sql);
     }catch(e){
-      print("CREATE TABLE 2");
       print(e);
     }
 
@@ -100,22 +104,34 @@ class DbHelper{
     try{
       await db.execute(sql);
     }catch(e){
-      print("CREATE TABLE 3");
       print(e);
     }
 
     sql='''INSERT INTO $MessageTable Values(1,"Next Date is #1",1)''';
-    String sql1='''INSERT INTO $MessageTable Values(2,"Reminder: tomorrow you have case date",1)''';
+    String sql1='''INSERT INTO $MessageTable Values(2,"Tomorrow will be your case hearing.",1)''';
     String sql2='''INSERT INTO $MessageTable Values(3, "Come for meeting on #1 at #2.",1)''';
+    String sql3='''INSERT INTO $MessageTable Values(4, "Kindly pay #3 by #1",1)''';
     try{
       
       await db.execute(sql);
       await db.execute(sql1);
       await db.execute(sql2);
+      await db.execute(sql3);
     }catch(e){
       print(e);
     }
 
+    sql='''CREATE TABLE $AccountTable(
+      $accountId INTEGER PRIMARY KEY AUTOINCREMENT,
+      $caseID INTEGER,
+      $text TEXT
+    )''';
+
+    try{
+      await db.execute(sql);
+    }catch(e){
+      print(e);
+    }
 
   }
 
@@ -133,16 +149,33 @@ class DbHelper{
         await Directory(dirname(path)).create(recursive: true);
       }
     }catch(e){
-      print("Database Path");
       print(e);
     }
     return path;
   }
 
+
+  Future<void>getUpdate()async{
+    String sql='''SELECT ${DbHelper.dispose} FROM ${DbHelper.CaseTable}''';
+    final data=await db.rawQuery(sql);
+    try{
+      if(data.length==0)
+      {
+        sql='''ALTER TABLE ${DbHelper.CaseTable} Add Column ${DbHelper.dispose} INT(1) DEFAULT 0''';
+        await db.rawQuery(sql);
+      }
+    }catch(e){
+      print(e);
+    }
+    
+  }
+
   Future<void>initDatabse() async{
     path=await getDatabasePath('advocate.db');
-    print(path);
+    
     db=await openDatabase(path,version:1,onCreate: onCreate);
+
+    await getUpdate();
     
   }
 
@@ -154,23 +187,13 @@ class DbHelper{
   Future<void>log()async{
     await initDatabse();
 
-    String dirPath=await getDatabasesPath();
-
-    // DriveStorage ds=DriveStorage();
-    // await ds.uploadFile(dirPath);
-
-    // print("Done Sucessfully");
-    // await ds.listGoogleDriveFiles();
-
     String sql='''SELECT * FROM ${DbHelper.CaseTable} where id=2''';
     final data=await db.rawQuery(sql);
-    print("Data");
-    print(data);
+    
     for(final x in data)
     {
       print(x);
     }
-    print("################################################################");
     sql='''SELECT * FROM ${DbHelper.DetailsTable}''';
     final info=await db.rawQuery(sql);
     for(final x in info)
@@ -180,6 +203,7 @@ class DbHelper{
 
     sql="SELECT * from $MessageTable";
     final result=await db.rawQuery(sql);
+    
     print(result);
   }
 
@@ -187,25 +211,28 @@ class DbHelper{
     await initDatabse();
     String sql='''SELECT $caseID FROM ${DbHelper.DetailsTable} WHERE $date="$queryDate"''';
     final data=await db.rawQuery(sql);
-    print(sql);
-    print("Data");
-    print(data);
+    
     List<Case>cases =List();
 
     for(final detail in data)
     {
       int id=detail['caseID'];
       sql='''SELECT * from $CaseTable where $caseId = $id''';
-      print(sql);
+      
       final result=await db.rawQuery(sql);
-      print(result);
+      
       for(final i in result)
       {
+        int fee=0;
+        if(i['$caseFee']!='null')
+          fee=i['$caseFee'];
+
+
         cases.add(
           new Case(
             id,i['$caseNumber'],i['$clientName'],i['$clientMobile'],i['$weAre'],i['$opponent'],i['$opponentAdvocate'],
-            i['$courtName'],i['$courtNumber'],i['$caseFee'],
-            i['$messagePermission']=='1'?true:false,i['$description']
+            i['$courtName'],i['$courtNumber'],fee,
+            i['$messagePermission']==1?true:false,i['$description']
           )
         );
       }
@@ -215,18 +242,21 @@ class DbHelper{
 
   Future<List<Case>>getAllCase() async{
     await initDatabse();
-    final  sql='''SELECT * from $CaseTable ORDER BY $caseId''';
+    final  sql='''SELECT * from $CaseTable ORDER BY $caseId DESC''';
     final result=await db.rawQuery(sql);
-    print("Result");
-    print(result);
+    
     List<Case>cases=List();
     for(final i in result)
     {
+      int fee=0;
+      if(i['$caseFee']!='null')
+        fee=i['$caseFee'];
+      
       cases.add(
         new Case(
-          i['$caseId'],i['$caseNumber'],i['$clientName'],i['$clientMobile'],i['$weAre'],i['$opponent'],i['$opponentAdvocate'],
-            i['$courtName'],i['$courtNumber'],i['$caseFee'],
-            i['$messagePermission']=='1'?true:false,i['$description']
+          i['$caseId'],i['$caseNumber'].toString(),i['$clientName'].toString(),i['$clientMobile'].toString(),i['$weAre'].toString()
+          ,i['$opponent'].toString(),i['$opponentAdvocate'].toString(),i['$courtName'].toString(),i['$courtNumber'].toString(),fee,
+            i['$messagePermission']==1?true:false,i['$description'].toString()
         )
       );
     }
@@ -256,7 +286,7 @@ class DbHelper{
   Future<void>addCase(Case newCase) async{
     await initDatabse();
     
-    await db.insert(
+    int id=await db.insert(
         "${DbHelper.CaseTable}",
         {
           "${DbHelper.caseNumber}":"${newCase.caseNumber}",
@@ -268,12 +298,13 @@ class DbHelper{
           "${DbHelper.courtName}":"${newCase.courtName}",
           "${DbHelper.courtNumber}":"${newCase.courtNumber}",
           "${DbHelper.caseFee}":"${newCase.caseFee}",
-          "${DbHelper.messagePermission}":"${newCase.messagePermission}",
+          "${DbHelper.messagePermission}":(newCase.messagePermission==true)?1:0,
           "${DbHelper.description}":"${newCase.description}",
         }
         
       );
     dS.backUpToDrive();
+    await addDetails(newCase.details[0],id);
   }
 
 
@@ -322,8 +353,8 @@ class DbHelper{
 
   Future<void>updateCase(Case updatedCase,int id)async{
     await initDatabse();
+    int permission=updatedCase.messagePermission?1:0;
     
-
     await db.update(
       "${DbHelper.CaseTable}",
       {
@@ -336,7 +367,7 @@ class DbHelper{
       ,"${DbHelper.courtName}":"${updatedCase.courtName}"
       ,"${DbHelper.courtNumber}":"${updatedCase.courtNumber}"
       ,"${DbHelper.caseFee}":"${updatedCase.caseFee}"
-      ,"${DbHelper.messagePermission}":"${updatedCase.messagePermission}"
+      ,"${DbHelper.messagePermission}":"$permission"
       ,"${DbHelper.description}":"${updatedCase.description}"
       },
       where: "${DbHelper.caseId}=?",
@@ -379,7 +410,6 @@ class DbHelper{
   Future<void>updateMessage(int id,String text,int allowed) async
   {
     await initDatabse();
-    
     await db.update(
       "${DbHelper.MessageTable}",
       {
@@ -390,6 +420,99 @@ class DbHelper{
       // whereArgs: ["$id"],
     );
     dS.backUpToDrive();
+  }
+
+  Future<void>addAcount(Fee account)async{
+    await initDatabse();
+
+    await db.insert(
+      "$AccountTable",
+      {
+        "$caseID":account.caseID,
+        "$text":account.text
+      }
+    );
+    dS.backUpToDrive();
+  }
+
+  Future<void>updateAccount(Fee account)async{
+    await initDatabse();
+    
+    await db.update(
+      "$AccountTable",
+      {
+        "$caseID":account.caseID,
+        "$text":account.text
+      },
+      where: "$accountId = ${account.id}",
+    );
+    dS.backUpToDrive();
+  }
+
+  Future<void>deleteAccount(int id)async{
+    await initDatabse();
+
+    await db.delete(
+      "$AccountTable",
+      where: "$accountId = $id",
+    );
+    dS.backUpToDrive();
+  }
+
+  Future<List<Fee>>getAccount(int id)async{
+    await initDatabse();
+    List<Fee>list=List();
+
+    String sql="SELECT * from $AccountTable where $caseID=$id ORDER BY $accountId DESC";
+    final data=await db.rawQuery(sql);
+
+    for(final x in data)
+    {
+      list.add(
+        Fee(x['$accountId'],x['$caseID'],x['$text'])
+      );
+    }
+    
+    return list;
+  }
+
+  Future<void>logAccount()async{
+    await initDatabse();
+
+    String sql="SELECT * from $AccountTable";
+    final data=await db.rawQuery(sql);
+
+    for(final x in data)
+    {
+      print(x);
+    }
+  }
+  
+  Future<void>disposeCase(int caseNo, String disposedMessage)async{
+    await initDatabse();
+    await db.update(
+      "$CaseTable",
+      {
+        "$dispose":1,
+      },
+      where: "$caseId = $caseNo",
+    );
+
+    DateTime now=DateTime.now();
+    String day=now.day.toString();
+        if(now.day<10)
+          day="0"+day;
+
+        String month=now.month.toString();
+        if(now.month<10)
+          month="0"+month;
+
+        String dateStored=now.year.toString()+"-"+month+"-"+day;
+
+    await addDetails(
+              Details(0,dateStored,"",disposedMessage,"",""),
+              caseNo
+            );
   }
 
   List<Details>sortByDate(List<Details>details)

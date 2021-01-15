@@ -1,3 +1,13 @@
+class Fee{
+  int id;
+  int caseID;
+  String text;
+
+  Fee(this.id,this.caseID,this.text);
+}
+
+
+
 class Details{
   int id;
   int number;
@@ -18,28 +28,6 @@ class Details{
     this.paymentDemand,
     
   );
-
-  int getID(){
-    return this.id;
-  }
-
-  String getDate(){
-    return this.date;
-  }
-
-  String getStage(){
-    return this.stage;
-  }
-
-  String getExtraNote(){
-    return this.extraNote;
-  }
-
-  String getPaymentDemand(){
-    return this.paymentDemand;
-  }
-
-  
 }
 
 
@@ -73,58 +61,4 @@ class Case{
       this.messagePermission,
       this.description
     );
-
-    int getID(){
-      return this.id;
-    }
-  
-    String getName(){
-      return this.clientName;
-    }
-
-    String getNumber(){
-      return this.clientMobile;
-    } 
-
-    String getOpponent(){
-      return this.opponent;
-    }
-
-    String getWeAre(){
-      return this.weAre;
-    } 
-
-    String getCourtName(){
-      return this.courtName;
-    }
-
-    String getCourtNumber(){
-      return this.courtNumber;
-    }
-
-    String getCaseNumber(){
-      return this.caseNumber;
-    }
-
-    int getCaseFee(){
-      return this.caseFee;
-    }
-
-    
-
-    bool getMessagePermission(){
-      return this.messagePermission;
-    }
-
-    
-
-    
-
-    List<Details>getDetails(){
-      return this.details;
-    }
-    
-    void addDetails(Details detail){
-      this.details.add(detail);
-    }
 }

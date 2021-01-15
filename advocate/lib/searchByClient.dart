@@ -23,12 +23,13 @@ class _SearchByClientState extends State<SearchByClient> {
       await dB.getAllCase().then((value){
         cases=value;
       });
-      setState(() {
-        wait=false;
-      });
 
     }catch(e){
       print(e);
+    }finally{
+      setState(() {
+        wait=false;
+      });
     }
   }
 
@@ -53,7 +54,8 @@ class _SearchByClientState extends State<SearchByClient> {
                   onPressed:(){
                     showSearch(context: context, delegate: Search());
                   }
-          )
+          ),
+          SizedBox(width: 20),
         ],
       ),
       body: wait==true?Center(
@@ -72,7 +74,7 @@ class _SearchByClientState extends State<SearchByClient> {
               child:Column(
                 children:<Widget>[
                   Text(
-                      cases[index].caseNumber.toString(),
+                      cases[index].caseNumber,
                       style: TextStyle(
                         fontSize: 18,
                       ),
@@ -151,7 +153,7 @@ class Search extends SearchDelegate{
       suggesstion.clear();
       for(int i=0;i<cases.length;i++)
       {
-        if(cases[i].clientName.toLowerCase().contains(query.toLowerCase()))
+        if((cases[i].clientName.toLowerCase().contains(query.toLowerCase())) || (cases[i].caseNumber.toLowerCase().contains(query.toLowerCase())))
         {
           suggesstion.insert(0, cases[i]);
         }

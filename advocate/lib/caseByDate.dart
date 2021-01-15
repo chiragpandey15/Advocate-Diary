@@ -22,9 +22,7 @@ class _CaseByDateState extends State<CaseByDate> {
 
       DbHelper dB=DbHelper();
       casesByDate=await dB.getCaseByDate(perticularDate);
-      print("Case by Date");
-      print(casesByDate.length);
-      print(casesByDate[0].clientName);
+      
 
     }catch(e){
 
