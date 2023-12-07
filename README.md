@@ -1,12 +1,12 @@
 # Advocate Diary
+
+## Project Description
+Advocate Diary is a comprehensive application designed to assist lawyers in managing their data effectively. Built using the Flutter framework, Advocate Diary offers a range of features to streamline the workflow of lawyers, including appointment management, case details tracking, client notifications, real-time backups, and access to essential legal reference materials. With its user-friendly interface and convenient functionality, Advocate Diary simplifies the daily tasks of lawyers and enhances their productivity.
+
 ![1](https://github.com/chiragpandey15/Advocate-Diary/assets/23038373/b5216482-3cd4-41c8-a2aa-dce6a14fdb00) ![2](https://github.com/chiragpandey15/Advocate-Diary/assets/23038373/30341791-0732-4b9e-9075-10e0bb914ccd)
 ![3](https://github.com/chiragpandey15/Advocate-Diary/assets/23038373/fc80874f-f71b-46c5-b5ba-0a6625b280a0)
  ![4](https://github.com/chiragpandey15/Advocate-Diary/assets/23038373/405a8501-8e43-4c2a-88e6-01c40b46b359)
 
-
-
-## Project Description
-Advocate Diary is a comprehensive application designed to assist lawyers in managing their data effectively. Built using the Flutter framework, Advocate Diary offers a range of features to streamline the workflow of lawyers, including appointment management, case details tracking, client notifications, real-time backups, and access to essential legal reference materials. With its user-friendly interface and convenient functionality, Advocate Diary simplifies the daily tasks of lawyers and enhances their productivity.
 
 ## Project Features
 1. **Appointment and Case Management**: Advocate Diary provides a centralized platform for lawyers to manage their appointments and case details efficiently. Lawyers can schedule appointments, add relevant information such as client names, dates, and case descriptions. Additionally, they can track the progress of each case, update case details, and maintain a comprehensive record of their legal engagements.
